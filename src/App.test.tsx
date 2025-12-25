@@ -3,13 +3,13 @@ import { render, screen } from "./tests/helpers";
 import App from "./App";
 
 describe("App", () => {
-  it("renders the CodjiFlo heading", () => {
+  it("redirects to Dashboard by default", () => {
     render(<App />);
-    expect(screen.getByRole("heading", { name: /codjiflo/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Dashboard/i })).toBeInTheDocument();
   });
 
-  it("renders the description", () => {
+  it("renders placeholder text", () => {
     render(<App />);
-    expect(screen.getByText(/code review tool for power users/i)).toBeInTheDocument();
+    expect(screen.getByText(/Placeholder for S-1.2/i)).toBeInTheDocument();
   });
 });
