@@ -9,20 +9,20 @@ export function LoginScreen() {
   const { validateToken, error, isValidating, clearError } = useAuthStore();
   const navigate = useNavigate();
 
+  const handleAuthentication = async () => {
+    try {
+      const success = await validateToken(tokenInput);
+      if (success) {
+        void navigate("/dashboard");
+      }
+    } catch {
+      // Error is already handled in the store
+    }
+  };
+
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    void (async () => {
-      try {
-        const success = await validateToken(tokenInput);
-        if (success) {
-          // eslint-disable-next-line @typescript-eslint/no-floating-promises
-          navigate("/dashboard");
-        }
-      } catch {
-        // Error is already handled in the store
-      }
-    })();
+    void handleAuthentication();
   };
 
   const handleInputChange = (value: string) => {

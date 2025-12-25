@@ -1,5 +1,5 @@
 import { cn } from "@/utils/cn";
-import { forwardRef, InputHTMLAttributes } from "react";
+import { forwardRef, InputHTMLAttributes, useId } from "react";
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -9,7 +9,8 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, helperText, className, id, ...props }, ref) => {
-    const inputId = id ?? (label ? `input-${label.toLowerCase().replace(/\s+/g, "-")}` : undefined);
+    const generatedId = useId();
+    const inputId = id ?? generatedId;
 
     return (
       <div className="w-full">
@@ -35,13 +36,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
           aria-invalid={error ? "true" : "false"}
           aria-describedby={
-            error ? `${inputId ?? 'input'}-error` : helperText ? `${inputId ?? 'input'}-helper` : undefined
+            error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined
           }
           {...props}
         />
         {error && (
           <p
-            id={`${inputId ?? 'input'}-error`}
+            id={`${inputId}-error`}
             className="mt-1 text-sm text-red-600"
             role="alert"
             aria-live="polite"
@@ -50,7 +51,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           </p>
         )}
         {!error && helperText && (
-          <p id={`${inputId ?? 'input'}-helper`} className="mt-1 text-sm text-gray-500">
+          <p id={`${inputId}-helper`} className="mt-1 text-sm text-gray-500">
             {helperText}
           </p>
         )}
