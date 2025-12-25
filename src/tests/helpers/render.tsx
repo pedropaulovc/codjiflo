@@ -1,7 +1,7 @@
 import { render, RenderOptions } from "@testing-library/react";
 import { ReactElement } from "react";
 
-// Add providers here as the app grows (e.g., theme, router, etc.)
+// eslint-disable-next-line react-refresh/only-export-components
 function AllProviders({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
@@ -13,5 +13,6 @@ function customRender(
   return render(ui, { wrapper: AllProviders, ...options });
 }
 
-export * from "@testing-library/react";
 export { customRender as render };
+// eslint-disable-next-line react-refresh/only-export-components
+export * from "@testing-library/react";

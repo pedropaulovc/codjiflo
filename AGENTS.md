@@ -30,4 +30,4 @@ npm run test:all         # REQUIRED before push (lint + typecheck + coverage + e
 
 ## Tech Stack
 
-React 18, TypeScript (strict), Vite, Tailwind CSS, Zustand, socket.io-client, Vitest, Playwright, Storybook
+React 18, TypeScript (strict), Vite, Tailwind CSS, Zustand, Vitest, Playwright, Storybook
