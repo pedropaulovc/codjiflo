@@ -1,0 +1,30 @@
+name: CD Main
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - run: npm run build -- --base=/codiflo/
+
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
+          external_repository: pedropaulovc/pedropaulovc.github.io
+          publish_dir: ./dist
+          destination_dir: codiflo/main
