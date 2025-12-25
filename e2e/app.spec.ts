@@ -24,9 +24,9 @@ test.describe("CodjiFlo App", () => {
     await input.fill("ghp_validtoken123456789");
     await button.click();
 
-    // Should be on dashboard
+    // Should be on dashboard with PR URL input
     await expect(page).toHaveURL(/.*\/dashboard/);
-    await expect(page.getByRole("heading", { name: /Dashboard/i })).toBeVisible();
-    await expect(page.getByText(/Placeholder for S-1.2/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: /View Pull Request/i })).toBeVisible();
+    await expect(page.getByLabel(/GitHub Pull Request URL/i)).toBeVisible();
   });
 });

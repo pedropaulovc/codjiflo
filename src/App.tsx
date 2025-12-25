@@ -1,10 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginScreen } from './features/auth/components';
 import { useAuthStore } from './features/auth/stores/useAuthStore';
-
-// Placeholder components for scaffolding
-const Dashboard = () => <div className="p-8 text-center"><h1>Dashboard</h1><p>Placeholder for S-1.2</p></div>;
-const PullRequestView = () => <div className="p-8 text-center"><h1>Pull Request View</h1><p>Placeholder for S-1.2+</p></div>;
+import { Dashboard, PullRequestView } from './pages';
 
 // Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -50,7 +47,7 @@ function App() {
             }
           />
           <Route
-            path="/pr/:id"
+            path="/pr/:owner/:repo/:number"
             element={
               <ProtectedRoute>
                 <PullRequestView />

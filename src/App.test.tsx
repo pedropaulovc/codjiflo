@@ -30,10 +30,11 @@ describe("App", () => {
     });
 
     render(<App />);
+    // Dashboard now shows "View Pull Request" heading and PR URL input
     expect(
-      screen.getByRole("heading", { name: /Dashboard/i })
+      screen.getByRole("heading", { name: /View Pull Request/i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/Placeholder for S-1.2/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/GitHub Pull Request URL/i)).toBeInTheDocument();
   });
 
   it("authenticated users cannot access login page", () => {
@@ -50,8 +51,9 @@ describe("App", () => {
     expect(
       screen.queryByRole("heading", { name: /Connect to GitHub/i })
     ).not.toBeInTheDocument();
+    // Should redirect to dashboard with "View Pull Request" heading
     expect(
-      screen.getByRole("heading", { name: /Dashboard/i })
+      screen.getByRole("heading", { name: /View Pull Request/i })
     ).toBeInTheDocument();
   });
 });
