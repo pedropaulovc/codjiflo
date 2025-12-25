@@ -1,4 +1,4 @@
-# EL400 DRO Simulator
+# CodjiFlo
 
 CodjiFlo is a code review tool tailored to power users of pull requests to improve contextual understanding and ease of code review and collaboration. 
 
