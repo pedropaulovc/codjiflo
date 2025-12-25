@@ -34,15 +34,15 @@ Backend abstraction layer supporting:
 
 | Component | Description |
 |-----------|-------------|
-| [Index](spec/index.md) | High-level overview of key features |
-| [Data Models](spec/models.md) | Core TypeScript interfaces |
-| [Backend Abstraction](spec/backend-abstraction.md) | Platform-agnostic API layer |
-| [Diff Viewing](spec/diff-viewing.md) | Multi-mode diff with word-level highlighting |
-| [Comments](spec/comments.md) | Bubble comment system |
-| [Iterations](spec/iterations.md) | Cross-version tracking |
-| [Review Lifecycle](spec/review-lifecycle.md) | State machine & permissions |
-| [UI Components](spec/ui-components.md) | Dashboard, Explorer, Properties |
-| [Real-Time](spec/realtime.md) | Push notifications via WebSocket |
+| [Index](spec/functional/index.md) | High-level overview of key features |
+| [Data Models](spec/functional/models.md) | Core TypeScript interfaces |
+| [Backend Abstraction](spec/functional/backend-abstraction.md) | Platform-agnostic API layer |
+| [Diff Viewing](spec/functional/diff-viewing.md) | Multi-mode diff with word-level highlighting |
+| [Comments](spec/functional/comments.md) | Bubble comment system |
+| [Iterations](spec/functional/iterations.md) | Cross-version tracking |
+| [Review Lifecycle](spec/functional/review-lifecycle.md) | State machine & permissions |
+| [UI Components](spec/functional/ui-components.md) | Dashboard, Explorer, Properties |
+| [Real-Time](spec/functional/realtime.md) | Push notifications via WebSocket |
 
 ## Key Differentiators
 
@@ -57,4 +57,4 @@ Backend abstraction layer supporting:
 CodjiFlo is a corrupted version (pt: [Corruptela](https://dicionario.priberam.org/corruptela)) of the word CodeFlow. Its pronunciation in English matches how a Brazilian with beginner level of proficience in English would say the word CodeFlow. It represents the fact that CodjiFlo is a "corrupted" version of the original CodeFlow and the author is Brazilian-American.
 
 ## Note
-This project is not associated or endorsed by Microsoft Corp. The [CodjiFlo specification](./spec/functional/index.md) was produced following a clean-room approach: the desired behavior was codified from research articles, interviews published by Microsoft, blog posts, linked in the spec, and the author's memory of how CodeFlow works.
+This project is not associated or endorsed by Microsoft Corp. The [CodjiFlo specification](./spec/functional/functional/index.md) was produced following a clean-room approach: the desired behavior was codified from research articles, interviews published by Microsoft, blog posts, linked in the spec, and the author's memory of how CodeFlow works.
