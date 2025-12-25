@@ -138,7 +138,7 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run build -- --base=/codjiflo/pr-${{ github.event.pull_request.number }}/
+      - run: npm run build -- --config vite.config.debug.ts --base=/codjiflo/pr-${{ github.event.pull_request.number }}/ --minify false --sourcemap
 
       - uses: peaceiris/actions-gh-pages@v4
         with:
