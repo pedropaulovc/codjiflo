@@ -36,4 +36,22 @@ describe("Button", () => {
     const button = screen.getByRole("button");
     expect(button).toHaveClass("bg-gray-200");
   });
+
+  it("renders with type='button' by default", () => {
+    render(<Button label="Click me" />);
+    const button = screen.getByRole("button");
+    expect(button).toHaveAttribute("type", "button");
+  });
+
+  it("renders with type='submit' when specified", () => {
+    render(<Button label="Submit" type="submit" />);
+    const button = screen.getByRole("button");
+    expect(button).toHaveAttribute("type", "submit");
+  });
+
+  it("renders with type='reset' when specified", () => {
+    render(<Button label="Reset" type="reset" />);
+    const button = screen.getByRole("button");
+    expect(button).toHaveAttribute("type", "reset");
+  });
 });
