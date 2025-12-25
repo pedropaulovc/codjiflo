@@ -157,3 +157,11 @@ src/
 ### 4.5 Self-Verification
 - **Run the Build**: After significant changes, run `npm run type-check` (or `tsc --noEmit`).
 - **Visual Check**: If possible, use `generate_image` to mockup complex UI before implementing, or request a screenshot review if the user has a browser active.
+
+### 4.6 Mock Data Standard
+- **Factories**: Use `src/tests/factories/` for generating test data. Do not manually construct complex objects in tests. This prevents test brittleness when types change.
+- **Example**: `const pr = createMockPullRequest({ state: 'open' });`
+
+### 4.7 Visual Component Usage
+- **No Native Elements**: Avoid using raw `<button>`, `<input>`, or `<select>` tags. Use the standardized components in `src/components/ui/` (e.g., `<Button>`, `<Input>`) to maintain design consistency.
+- **Icons**: Use `lucide-react` for icons. Do not import other icon libraries.
