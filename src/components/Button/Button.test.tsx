@@ -1,0 +1,39 @@
+import { describe, it, expect, vi } from "vitest";
+import { render, screen } from "../../tests/helpers";
+import userEvent from "@testing-library/user-event";
+import { Button } from "./Button";
+
+describe("Button", () => {
+  it("renders with the provided label", () => {
+    render(<Button label="Click me" />);
+    expect(screen.getByRole("button", { name: /click me/i })).toBeInTheDocument();
+  });
+
+  it("calls onClick when clicked", async () => {
+    const handleClick = vi.fn();
+    render(<Button label="Click me" onClick={handleClick} />);
+
+    await userEvent.click(screen.getByRole("button"));
+    expect(handleClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not call onClick when disabled", async () => {
+    const handleClick = vi.fn();
+    render(<Button label="Click me" onClick={handleClick} disabled />);
+
+    await userEvent.click(screen.getByRole("button"));
+    expect(handleClick).not.toHaveBeenCalled();
+  });
+
+  it("applies primary variant styles by default", () => {
+    render(<Button label="Primary" />);
+    const button = screen.getByRole("button");
+    expect(button).toHaveClass("bg-blue-600");
+  });
+
+  it("applies secondary variant styles when specified", () => {
+    render(<Button label="Secondary" variant="secondary" />);
+    const button = screen.getByRole("button");
+    expect(button).toHaveClass("bg-gray-200");
+  });
+});
