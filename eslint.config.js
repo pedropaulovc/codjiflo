@@ -25,7 +25,7 @@ export default tseslint.config({ ignores: ["dist", "storybook-static", "coverage
   rules: {
     ...reactHooks.configs.recommended.rules,
     "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
-    "@typescript-eslint/no-unused-vars": "off",
+    "@typescript-eslint/no-confusing-void-expression": "off",
   },
 }, {
   // Disable type-aware linting for config files
