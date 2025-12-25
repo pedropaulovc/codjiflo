@@ -3,15 +3,13 @@ permissions:
   pull-requests: write
 
 on:
-  push:
-    branches: [main, master]
   pull_request:
     branches: [main, master]
     types: [opened, synchronize, reopened, closed]
 
 concurrency:
-  group: ${{ github.event_name == 'pull_request' && format('preview-{0}', github.event.pull_request.number) || format('ci-{0}', github.run_id) }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   lint:
