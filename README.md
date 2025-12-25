@@ -26,10 +26,9 @@ Backend abstraction layer supporting:
 
 ### Build & CI Integration
 
-- Automatic build triggering on review creation
-- Build status visibility for all reviewers
-- Quality gates with pre-merge validation
-- Inline lint results and code coverage display
+- Improved build status and policy checks visibility for all reviewers
+- Inline lint results
+- Code coverage display
 
 ## Functional specification
 
