@@ -39,7 +39,7 @@ async function validateGitHubToken(token: string): Promise<boolean> {
 
 export const useAuthStore = create<AuthState>()(
     persist(
-        (set, get) => ({
+        (set) => ({
             token: null,
             isAuthenticated: false,
             error: null,
@@ -61,8 +61,7 @@ export const useAuthStore = create<AuthState>()(
                 const isValid = await validateGitHubToken(token);
                 
                 if (isValid) {
-                    get().setToken(token);
-                    set({ isValidating: false });
+                    set({ token, isAuthenticated: true, error: null, isValidating: false });
                     return true;
                 } else {
                     set({ error: 'Authentication failed. Please check your token.', isValidating: false });
