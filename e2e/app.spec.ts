@@ -1,14 +1,32 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("CodjiFlo App", () => {
-  test("should redirect to dashboard and show heading", async ({ page }) => {
+  test("should redirect unauthenticated users to login", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveURL(/.*\/dashboard/);
-    await expect(page.getByRole("heading", { name: /Dashboard/i })).toBeVisible();
+    await expect(page).toHaveURL(/.*\/login/);
+    await expect(page.getByRole("heading", { name: /Connect to GitHub/i })).toBeVisible();
   });
 
-  test("should display placeholder description", async ({ page }) => {
-    await page.goto("/");
+  test("should show dashboard when authenticated", async ({ page }) => {
+    // Mock the GitHub API
+    await page.route("https://api.github.com/user", (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ login: "testuser", id: 1 }),
+      });
+    });
+
+    // Login first
+    await page.goto("/login");
+    const input = page.getByLabel(/Personal Access Token/i);
+    const button = page.getByRole("button", { name: /Connect/i });
+    await input.fill("ghp_validtoken123456789");
+    await button.click();
+
+    // Should be on dashboard
+    await expect(page).toHaveURL(/.*\/dashboard/);
+    await expect(page.getByRole("heading", { name: /Dashboard/i })).toBeVisible();
     await expect(page.getByText(/Placeholder for S-1.2/i)).toBeVisible();
   });
 });
