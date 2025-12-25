@@ -77,14 +77,6 @@ jobs:
           json-summary-compare-path: ${{ steps.download-coverage-baseline.outcome == 'success' && 'coverage-baseline/coverage-summary.json' || '' }}
           threshold-icons: "{0: '🔴', 70: '🟡', 75: '🔵', 85: '🟢'}"
 
-      - name: Upload coverage baseline
-        if: github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-baseline
-          path: coverage/coverage-summary.json
-          retention-days: 10
-
   e2e-tests:
     runs-on: ubuntu-latest
     steps:
