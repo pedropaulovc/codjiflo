@@ -1,13 +1,14 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("CodjiFlo App", () => {
-  test("should display the main heading", async ({ page }) => {
+  test("should redirect to dashboard and show heading", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: /codjiflo/i })).toBeVisible();
+    await expect(page).toHaveURL(/.*\/dashboard/);
+    await expect(page.getByRole("heading", { name: /Dashboard/i })).toBeVisible();
   });
 
-  test("should display the description", async ({ page }) => {
+  test("should display placeholder description", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByText(/code review tool for power users/i)).toBeVisible();
+    await expect(page.getByText(/Placeholder for S-1.2/i)).toBeVisible();
   });
 });
