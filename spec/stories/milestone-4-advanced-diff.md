@@ -8,16 +8,34 @@
 
 - **Accessiblity**: Screen reader support for side-by-side view (announcing "Left side" vs "Right side" context).
 
+## Architecture & Scaffolding
+*Implementation must follow `spec/ARCHITECTURE.md`. Focus on `workers/diff-worker.ts`.*
+
 ## Dependency Graph
 
 ```mermaid
 graph TD
-    M1[Milestone 1 Diff] --> S4.1[S-4.1 Side-by-Side]
+    M1[Milestone 1 Diff] --> S4.0[S-4.0 Diff Engine]
+    S4.0 --> S4.1[S-4.1 Side-by-Side]
     M1 --> S4.2[S-4.2 Iterations Data]
     S4.2 --> S4.3[S-4.3 Iteration Selector]
     S4.1 --> S4.4[S-4.4 Word-Level Diff]
     S4.1 --> S4.5[S-4.5 Toggle Whitespace]
 ```
+
+---
+
+## [S-4.0] Story 4.0: Diff Engine Scaffolding (Web Worker)
+
+As a developer, I want to compute diffs in a background thread so that the UI remains responsive even for large files.
+
+### Description
+Set up a Web Worker infrastructure to handle text diffing algorithms (e.g., using `diff-match-patch` or `myers-diff`).
+
+### Acceptance Criteria
+1.  **Worker Setup**:
+    - [ ] [AC-4.0.1] `diff.worker.ts` created.
+    - [ ] [AC-4.0.2] Async message passing interface defined (`computeDiff(textA, textB) -> DiffResult`).
 
 ---
 

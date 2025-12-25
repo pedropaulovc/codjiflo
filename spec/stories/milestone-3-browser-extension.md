@@ -9,16 +9,36 @@
 
 - **Accessibility**: Injected buttons must match GitHub's accessibility standards (focus rings, aria labels).
 
+## Architecture & Scaffolding
+*Implementation must follow `spec/ARCHITECTURE.md`. Focus on `features/extension` and Manifest generation.*
+
 ## Dependency Graph
 
 ```mermaid
 graph TD
-    S3.1[S-3.1 Build System] --> S3.2[S-3.2 Entry Point]
+    S3.0[S-3.0 Scaffolding] --> S3.1[S-3.1 Build System]
+    S3.0 --> S3.2[S-3.2 Entry Point]
     S3.1 --> S3.3[S-3.3 Overlay]
     S3.1 --> S3.4[S-3.4 Auth Bridge]
     S3.1 --> S3.5[S-3.5 Cross-Browser]
     S3.2 --> S3.3
 ```
+
+---
+
+## [S-3.0] Story 3.0: Extension Architecture Setup
+
+As a developer, I want to configure the build pipeline to generate browser extension assets so I can run the app in a browser context.
+
+### Description
+Set up `manifest.json` generation scripts (or `vite-plugin-web-extension`). Create entry points for Content Scripts and Background Scripts.
+
+### Acceptance Criteria
+1.  **Build Config**:
+    - [ ] [AC-3.0.1] Vite config updated to output `dist/extension`.
+    - [ ] [AC-3.0.2] `content-script.ts` entry point configured.
+2.  **App Mount**:
+    - [ ] [AC-3.0.3] Logic to switching between 'Web Mode' (Root div) and 'Extension Mode' (Shadow DOM injection).
 
 ---
 

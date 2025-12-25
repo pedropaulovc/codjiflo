@@ -8,11 +8,17 @@
 
 - **Accessibility**: Status changes and real-time alerts must be announced via ARIA live regions. Settings pannels must be fully accessible.
 
+- **Accessibility**: Status changes and real-time alerts must be announced via ARIA live regions. Settings pannels must be fully accessible.
+
+## Architecture & Scaffolding
+*Implementation must follow `spec/ARCHITECTURE.md`. Focus on `api/realtime`.*
+
 ## Dependency Graph
 
 ```mermaid
 graph TD
-    M1[Milestone 1] --> S6.1[S-6.1 Real-time]
+    M1[Milestone 1] --> S6.0[S-6.0 Real-time Manager]
+    S6.0 --> S6.1[S-6.1 Real-time]
     M1 --> S6.2[S-6.2 Lifecycle]
     M1 --> S6.3[S-6.3 CI Status]
     M1 --> S6.4[S-6.4 Settings]
@@ -21,6 +27,20 @@ graph TD
     style S6.3 stroke-dasharray: 5 5
     style S6.4 stroke-dasharray: 5 5
 ```
+
+---
+
+## [S-6.0] Story 6.0: Real-time Service Manager
+
+As a developer, I want a centralized service to handle polling/socket connections so that the rest of the app just subscribes to updates.
+
+### Description
+Implement `RealTimeService` singleton or hook.
+
+### Acceptance Criteria
+1.  **Service**:
+    - [ ] [AC-6.0.1] `RealTimeService` created with `subscribe(event, callback)`.
+    - [ ] [AC-6.0.2] Basic polling loop implementation.
 
 ---
 

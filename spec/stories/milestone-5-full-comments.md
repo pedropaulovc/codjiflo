@@ -8,17 +8,37 @@
 
 - **Accessibility**: This is critical for floating UI. Bubbles must remain in the DOM structure logically (or be managed carefully with aria-owns) so screen readers can follow the flow. Keyboard navigation between code and bubbles is essential.
 
+- **Accessibility**: This is critical for floating UI. Bubbles must remain in the DOM structure logically (or be managed carefully with aria-owns) so screen readers can follow the flow. Keyboard navigation between code and bubbles is essential.
+
+## Architecture & Scaffolding
+*Implementation must follow `spec/ARCHITECTURE.md`. Focus on `features/comments/layout-engine`.*
+
 ## Dependency Graph
 
 ```mermaid
 graph TD
-    M4[Milestone 4 Diff] --> S5.1[S-5.1 Region Selection]
-    M4 --> S5.2[S-5.2 Floating Bubbles]
+    M4[Milestone 4 Diff] --> S5.0[S-5.0 Layout Engine]
+    S5.0 --> S5.1[S-5.1 Region Selection]
+    S5.0 --> S5.2[S-5.2 Floating Bubbles]
     S5.1 --> S5.3[S-5.3 Lasso Connectors]
     S5.2 --> S5.3
     S5.1 --> S5.4[S-5.4 Span Tracking]
     S5.2 --> S5.5[S-5.5 Rich Editor]
 ```
+
+---
+
+## [S-5.0] Story 5.0: Canvas Layout Engine
+
+As a developer, I want a dedicated layout system for positioning floating elements so that I can calculate bubble positions without DOM thrashing.
+
+### Description
+Create a pure logic class/function that accepts code line heights and comment heights, and outputs absolute positioning coordinates.
+
+### Acceptance Criteria
+1.  **Engine**:
+    - [ ] [AC-5.0.1] `LayoutEngine` class stubbed with methods `calculatePositions(lines, comments)`.
+    - [ ] [AC-5.0.2] Unit tests for basic collision avoidance logic.
 
 ---
 

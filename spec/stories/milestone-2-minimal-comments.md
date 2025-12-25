@@ -12,16 +12,36 @@
 
   - ARIA live regions for successful comment posting.
 
+## Architecture & Scaffolding
+*Implementation must follow `spec/ARCHITECTURE.md`. Focus on `features/comments` module.*
+
 ## Dependency Graph
 
 ```mermaid
 graph TD
-    M1[Milestone 1] --> S2.1[S-2.1 View Threads]
+    M1[Milestone 1] --> S2.0[S-2.0 Scaffolding]
+    S2.0 --> S2.1[S-2.1 View Threads]
     S2.1 --> S2.2[S-2.2 Add Comment]
     S2.1 --> S2.3[S-2.3 Reply]
     S2.1 --> S2.4[S-2.4 Edit/Delete]
     S2.1 --> S2.5[S-2.5 Resolve]
 ```
+
+---
+
+## [S-2.0] Story 2.0: Comments Feature Scaffolding
+
+As a developer, I want to establish the data structures and stores for comments so that UI components have a reliable data source.
+
+### Description
+Create the `features/comments` directory structure. Define TypeScript interfaces for GitHub Review Comments. Implement `useCommentsStore`.
+
+### Acceptance Criteria
+1.  **Data Structure**:
+    - [ ] [AC-2.0.1] `types.ts` defines `Comment`, `ReviewThread`.
+2.  **State Management**:
+    - [ ] [AC-2.0.2] `useCommentsStore` implemented with mock data capabilities or API stubs.
+    - [ ] [AC-2.0.3] Helpers functions to map "Diff Line Index" to "Comment Position".
 
 ---
 

@@ -13,16 +13,40 @@
 
   - High Contrast mode support (verified with OS settings or CSS media queries).
 
+## Architecture & Scaffolding
+*Implementation must follow `spec/ARCHITECTURE.md`.*
+
 ## Dependency Graph
 
 ```mermaid
 graph TD
-    S1.1[S-1.1 Authenticate] --> S1.2[S-1.2 PR Metadata]
+    S1.0[S-1.0 Scaffolding] --> S1.1[S-1.1 Authenticate]
+    S1.0 --> S1.2[S-1.2 PR Metadata]
+    S1.1 --> S1.2
     S1.1 --> S1.3[S-1.3 File List]
     S1.3 --> S1.4[S-1.4 Minimal Diff]
     S1.3 --> S1.5[S-1.5 Shortcuts]
     S1.4 --> S1.5
 ```
+
+---
+
+## [S-1.0] Story 1.0: Technical Scaffolding & Project Setup
+
+As a developer, I want to set up the project structure, routing, and global state managers so that features can be built in isolation.
+
+### Description
+Initialize the codebase according to `spec/ARCHITECTURE.md`. Change the default Vite template to the Feature-First structure. Install core dependencies (`zustand`, `react-router-dom`, `clsx`, `tailwind-merge`).
+
+### Acceptance Criteria
+1.  **Directory Structure**:
+    - [ ] [AC-1.0.1] Folders created: `api`, `features/auth`, `features/pr`, `features/diff`, `components/ui`.
+2.  **Routing**:
+    - [ ] [AC-1.0.2] `react-router-dom` configured in `App.tsx`. Routes: `/login`, `/dashboard`, `/pr/:id`.
+3.  **State**:
+    - [ ] [AC-1.0.3] `useAuthStore` created in `features/auth/stores`.
+4.  **Utilities**:
+    - [ ] [AC-1.0.4] `cn()` helper configured (clsx + tailwind-merge) for dynamic classes.
 
 ---
 
