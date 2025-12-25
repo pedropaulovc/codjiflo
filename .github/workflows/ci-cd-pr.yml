@@ -5,7 +5,7 @@ permissions:
 on:
   pull_request:
     branches: [main]
-    types: [opened, synchronize, reopened, closed]
+    types: [opened, synchronize, reopened]
 
 concurrency:
   group: pr-${{ github.event.pull_request.number }}
@@ -126,8 +126,7 @@ jobs:
         timeout-minutes: 1
         run: npm run test:storybook
 
-  manual-test-pr:
-    if: github.event.action != 'closed'
+  manual-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -169,23 +168,3 @@ jobs:
             _Updated for commit ${{ github.event.pull_request.head.sha }}_
           edit-mode: replace
 
-  manual-test-pr-clean:
-    if: github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: pedropaulovc/pedropaulovc.github.io
-          ref: gh-pages
-          token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
-
-      - name: Remove preview directory
-        run: |
-          if [ -d "codiflo/pr-${{ github.event.pull_request.number }}" ]; then
-            rm -rf codiflo/pr-${{ github.event.pull_request.number }}
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add -A
-            git commit -m "Clean up codiflo PR #${{ github.event.pull_request.number }} preview" || echo "Nothing to commit"
-            git push
-          fi

@@ -1,0 +1,33 @@
+name: PR Preview Cleanup
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches: [main]
+    types: [closed]
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  manual-tests-clean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: pedropaulovc/pedropaulovc.github.io
+          ref: gh-pages
+          token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
+
+      - name: Remove preview directory
+        run: |
+          if [ -d "codiflo/pr-${{ github.event.pull_request.number }}" ]; then
+            rm -rf codiflo/pr-${{ github.event.pull_request.number }}
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "Clean up codiflo PR #${{ github.event.pull_request.number }} preview" || echo "Nothing to commit"
+            git push
+          fi
