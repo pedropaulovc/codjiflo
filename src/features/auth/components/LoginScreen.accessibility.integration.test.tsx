@@ -86,7 +86,7 @@ describe("LoginScreen - Accessibility", () => {
     expect(input).toBeEnabled();
   });
 
-  it("should support keyboard navigation", async () => {
+  it("should support keyboard navigation", () => {
     renderLoginScreen();
     
     const input = screen.getByLabelText(/Personal Access Token/i);
