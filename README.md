@@ -34,6 +34,7 @@ Backend abstraction layer supporting:
 
 | Component | Description |
 |-----------|-------------|
+| [Index](spec/index.md) | High-level overview of key features |
 | [Data Models](spec/models.md) | Core TypeScript interfaces |
 | [Backend Abstraction](spec/backend-abstraction.md) | Platform-agnostic API layer |
 | [Diff Viewing](spec/diff-viewing.md) | Multi-mode diff with word-level highlighting |
