@@ -138,14 +138,14 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run build -- --base=/codiflo/pr-${{ github.event.pull_request.number }}/
+      - run: npm run build -- --base=/codjiflo/pr-${{ github.event.pull_request.number }}/
 
       - uses: peaceiris/actions-gh-pages@v4
         with:
           personal_token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
           external_repository: pedropaulovc/pedropaulovc.github.io
           publish_dir: ./dist
-          destination_dir: codiflo/pr-${{ github.event.pull_request.number }}
+          destination_dir: codjiflo/pr-${{ github.event.pull_request.number }}
 
       - name: Find Comment
         uses: peter-evans/find-comment@v3
@@ -163,7 +163,7 @@ jobs:
           body: |
             ## Preview Deployment
 
-            :rocket: **Preview:** https://gh.vza.net/codiflo/pr-${{ github.event.pull_request.number }}/
+            :rocket: **Preview:** https://gh.vza.net/codjiflo/pr-${{ github.event.pull_request.number }}/
 
             _Updated for commit ${{ github.event.pull_request.head.sha }}_
           edit-mode: replace
