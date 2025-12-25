@@ -4,11 +4,11 @@ permissions:
 
 on:
   pull_request:
-    branches: [main, master]
+    branches: [main]
     types: [opened, synchronize, reopened, closed]
 
 concurrency:
-  group: preview-${{ github.event.pull_request.number }}
+  group: pr-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
