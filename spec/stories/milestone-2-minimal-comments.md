@@ -11,7 +11,7 @@
   - ARIA live regions for successful comment posting.
 
 ## Architecture & Scaffolding
-*Implementation must follow `spec/ARCHITECTURE.md`. Focus on `features/comments` module.*
+*Implementation must follow `AGENTS.md` (root). Focus on `features/comments` module.*
 
 ## Dependency Graph
 

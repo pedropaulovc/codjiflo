@@ -7,7 +7,7 @@
 - **Accessiblity**: Screen reader support for side-by-side view (announcing "Left side" vs "Right side" context).
 
 ## Architecture & Scaffolding
-*Implementation must follow `spec/ARCHITECTURE.md`. Focus on `workers/diff-worker.ts`.*
+*Implementation must follow `AGENTS.md` (root). Focus on `workers/diff-worker.ts`.*
 
 ## Dependency Graph
 

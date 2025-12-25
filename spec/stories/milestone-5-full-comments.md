@@ -9,7 +9,7 @@
 - **Accessibility**: This is critical for floating UI. Bubbles must remain in the DOM structure logically (or be managed carefully with aria-owns) so screen readers can follow the flow. Keyboard navigation between code and bubbles is essential.
 
 ## Architecture & Scaffolding
-*Implementation must follow `spec/ARCHITECTURE.md`. Focus on `features/comments/layout-engine`.*
+*Implementation must follow `AGENTS.md` (root). Focus on `features/comments/layout-engine`.*
 
 ## Dependency Graph
 

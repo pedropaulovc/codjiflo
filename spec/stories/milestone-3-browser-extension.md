@@ -8,7 +8,7 @@
 - **Accessibility**: Injected buttons must match GitHub's accessibility standards (focus rings, aria labels).
 
 ## Architecture & Scaffolding
-*Implementation must follow `spec/ARCHITECTURE.md`. Focus on `features/extension` and Manifest generation.*
+*Implementation must follow `AGENTS.md` (root). Focus on `features/extension` and Manifest generation.*
 
 ## Dependency Graph
 

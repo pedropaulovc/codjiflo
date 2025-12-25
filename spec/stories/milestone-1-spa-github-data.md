@@ -12,7 +12,7 @@
   - High Contrast mode support (verified with OS settings or CSS media queries).
 
 ## Architecture & Scaffolding
-*Implementation must follow `spec/ARCHITECTURE.md`.*
+*Implementation must follow `AGENTS.md` (root).*
 
 ## Dependency Graph
 
@@ -34,7 +34,7 @@ graph TD
 As a developer, I want to set up the project structure, routing, and global state managers so that features can be built in isolation.
 
 ### Description
-Initialize the codebase according to `spec/ARCHITECTURE.md`. Change the default Vite template to the Feature-First structure. Install core dependencies (`zustand`, `react-router-dom`, `clsx`, `tailwind-merge`).
+Initialize the codebase according to `AGENTS.md` (root). Change the default Vite template to the Feature-First structure. Install core dependencies (`zustand`, `react-router-dom`, `clsx`, `tailwind-merge`).
 
 ### Acceptance Criteria
 1.  **Directory Structure**:

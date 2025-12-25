@@ -9,7 +9,7 @@
 - **Accessibility**: Status changes and real-time alerts must be announced via ARIA live regions. Settings pannels must be fully accessible.
 
 ## Architecture & Scaffolding
-*Implementation must follow `spec/ARCHITECTURE.md`. Focus on `api/realtime`.*
+*Implementation must follow `AGENTS.md` (root). Focus on `api/realtime`.*
 
 ## Dependency Graph
 
