@@ -1,8 +1,42 @@
-# CodjiFlo Architecture & Implementation Standards
+# CodjiFlo
 
-> **Critical Instruction for Agents**: This document is the source of truth for code structure. You MUST NOT deviate from these patterns without updating this document first. "Consistency is better than cleverness."
+CodjiFlo is a code review tool tailored to power users of pull requests to improve contextual understanding and ease of code review and collaboration.
+
+## Commands
+
+```bash
+npm run dev              # Development server
+npm run build            # Production build
+npm run lint             # ESLint
+npm run typecheck        # TypeScript type checking (tsc)
+npm run test             # Unit and integration tests (Vitest)
+npm run test:coverage    # Unit and integration tests with coverage, min 70% enforced
+npm run test:storybook   # Storybook interaction tests
+npm run test:e2e         # Playwright E2E
+npm run test:all         # REQUIRED before push (lint + typecheck + coverage + e2e + storybook)
+```
+
+## Testing Exit Criteria
+
+**All changes:** `npm run test:all` must pass
+**New features:** 1-2 E2E tests + integration tests + unit tests
+
+| Type | Pattern | Notes |
+|------|---------|-------|
+| Unit | `src/**/*.test.ts(x)` | Primary. Use Vitest + RTL |
+| Integration | `*.integration.test.tsx` | Use `data-testid`, helpers in `src/tests/helpers/`. Test happy AND unhappy paths |
+| E2E | `e2e/**/*.spec.ts` | Playwright. Critical flows only |
+| Stories | `src/**/*.stories.tsx` | Visual docs only, no behavior tests |
+
+## Tech Stack
+
+React 18, TypeScript (strict), Vite, Tailwind CSS, Zustand, Vitest, Playwright, Storybook
 
 ---
+
+# Architecture & Implementation Standards
+
+> **Critical Instruction for Agents**: This document is the source of truth for code structure. You MUST NOT deviate from these patterns without updating this document first. "Consistency is better than cleverness."
 
 ## 1. Global Code Structure Principles (The "Constitution")
 
@@ -50,8 +84,6 @@ src/
     - **Mocking**: Use MSW (Mock Service Worker) for network isolation during tests. Do NOT hit real GitHub API in CI.
     - **Coverage**: One E2E spec per User Story Acceptance Criteria set.
 
----
-
 ## 2. Milestone Architectural Plans
 
 ### Milestone 1: SPA Foundation
@@ -95,8 +127,6 @@ src/
 **Goal**: Performance and Synchronization.
 - **Architecture**:
   - `src/api/realtime.ts`: A polling manager (Interval based) that checks `ETag` or `Last-Modified` headers to fetch delta updates.
-
----
 
 ## 3. General Agent Rules
 1.  **Do Not Delete Logic**: When refactoring, verify usage. Use "Find Usages".
