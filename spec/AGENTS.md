@@ -1,42 +1,8 @@
-# CodjiFlo
-
-CodjiFlo is a code review tool tailored to power users of pull requests to improve contextual understanding and ease of code review and collaboration.
-
-## Commands
-
-```bash
-npm run dev              # Development server
-npm run build            # Production build
-npm run lint             # ESLint
-npm run typecheck        # TypeScript type checking (tsc)
-npm run test             # Unit and integration tests (Vitest)
-npm run test:coverage    # Unit and integration tests with coverage, min 70% enforced
-npm run test:storybook   # Storybook interaction tests
-npm run test:e2e         # Playwright E2E
-npm run test:all         # REQUIRED before push (lint + typecheck + coverage + e2e + storybook)
-```
-
-## Testing Exit Criteria
-
-**All changes:** `npm run test:all` must pass
-**New features:** 1-2 E2E tests + integration tests + unit tests
-
-| Type | Pattern | Notes |
-|------|---------|-------|
-| Unit | `src/**/*.test.ts(x)` | Primary. Use Vitest + RTL |
-| Integration | `*.integration.test.tsx` | Use `data-testid`, helpers in `src/tests/helpers/`. Test happy AND unhappy paths |
-| E2E | `e2e/**/*.spec.ts` | Playwright. Critical flows only |
-| Stories | `src/**/*.stories.tsx` | Visual docs only, no behavior tests |
-
-## Tech Stack
-
-React 18, TypeScript (strict), Vite, Tailwind CSS, Zustand, Vitest, Playwright, Storybook
-
----
-
-# Architecture & Implementation Standards
+# CodjiFlo Architecture & Implementation Standards
 
 > **Critical Instruction for Agents**: This document is the source of truth for code structure. You MUST NOT deviate from these patterns without updating this document first. "Consistency is better than cleverness."
+
+---
 
 ## 1. Global Code Structure Principles (The "Constitution")
 
@@ -84,6 +50,8 @@ src/
     - **Mocking**: Use MSW (Mock Service Worker) for network isolation during tests. Do NOT hit real GitHub API in CI.
     - **Coverage**: One E2E spec per User Story Acceptance Criteria set.
 
+---
+
 ## 2. Milestone Architectural Plans
 
 ### Milestone 1: SPA Foundation
@@ -128,40 +96,9 @@ src/
 - **Architecture**:
   - `src/api/realtime.ts`: A polling manager (Interval based) that checks `ETag` or `Last-Modified` headers to fetch delta updates.
 
+---
+
 ## 3. General Agent Rules
 1.  **Do Not Delete Logic**: When refactoring, verify usage. Use "Find Usages".
 2.  **Explicit Types**: No `any`. Use `unknown` if unsure, but prefer defined interfaces.
 3.  **Errors**: Always handle API errors gracefully in the UI (Error Boundaries or Toast Notifications).
-
----
-
-## 4. Agent Quality of Life & Workflow Standards
-*Guidelines to ensure efficient, error-free autonomous development.*
-
-### 4.1 "Stop and Read" Policy
-- **Before Coding**: Agents must read `task.md` and the specific `spec/stories/milestone-X.md` they are working on.
-- **Before Modifying**: Always read the existing file content (or a relevant chunk) before calling `replace_file_content`. Blind edits are forbidden.
-
-### 4.2 Error Recovery Protocol
-- **Linter Errors**: If a fix triggers a linter error, DO NOT suppress it with `// eslint-disable` unless absolutely necessary. Fix the root cause.
-- **Test Failures**: Analyze the failure output. If the test is wrong (e.g., outdated selector), update the test. If the code is wrong, update the code. Do not delete the test.
-
-### 4.3 Atomic Task Management
-- **One Task at a Time**: Do not try to implement multiple user stories in a single `task_boundary` session.
-- **Update Artifacts**: Keep `task.md` updated in real-time. If you finish a sub-task, mark it checked immediately.
-
-### 4.4 Context Optimization
-- **Path Aliases**: Use `@/` for imports (e.g., `import { Button } from '@/components/ui/button'`) instead of `../../../../`. This reduces cognitive load when moving files.
-- **Type Definitions**: Look in `src/features/{feature}/types.ts` first. Only verify `src/types` if generic.
-
-### 4.5 Self-Verification
-- **Run the Build**: After significant changes, run `npm run type-check` (or `tsc --noEmit`).
-- **Visual Check**: If possible, use `generate_image` to mockup complex UI before implementing, or request a screenshot review if the user has a browser active.
-
-### 4.6 Mock Data Standard
-- **Factories**: Use `src/tests/factories/` for generating test data. Do not manually construct complex objects in tests. This prevents test brittleness when types change.
-- **Example**: `const pr = createMockPullRequest({ state: 'open' });`
-
-### 4.7 Visual Component Usage
-- **No Native Elements**: Avoid using raw `<button>`, `<input>`, or `<select>` tags. Use the standardized components in `src/components/ui/` (e.g., `<Button>`, `<Input>`) to maintain design consistency.
-- **Icons**: Use `lucide-react` for icons. Do not import other icon libraries.
