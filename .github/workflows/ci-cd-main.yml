@@ -1,0 +1,63 @@
+name: CD Main
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
+
+jobs:
+  coverage-baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        timeout-minutes: 1
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        timeout-minutes: 1
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        timeout-minutes: 1
+        run: npm ci
+
+      - name: Run unit tests with coverage
+        timeout-minutes: 2
+        run: npm run test:coverage
+
+      - name: Upload coverage baseline
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-baseline
+          path: coverage/coverage-summary.json
+          retention-days: 10
+
+  deploy-main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - run: npm run build -- --base=/codiflo/
+
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
+          external_repository: pedropaulovc/pedropaulovc.github.io
+          publish_dir: ./dist
+          destination_dir: codiflo/main

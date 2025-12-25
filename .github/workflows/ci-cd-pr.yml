@@ -1,0 +1,191 @@
+name: Test Suite
+permissions:
+  pull-requests: write
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, closed]
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        timeout-minutes: 1
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        timeout-minutes: 1
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        timeout-minutes: 1
+        run: npm ci
+
+      - name: Run linter
+        timeout-minutes: 1
+        run: npm run lint
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        timeout-minutes: 1
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        timeout-minutes: 1
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        timeout-minutes: 1
+        run: npm ci
+
+      - name: Run unit tests with coverage
+        timeout-minutes: 2
+        run: npm run test:coverage
+
+      - name: Download base coverage
+        id: download-coverage-baseline
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: ci-cd-main.yml
+          branch: main
+          name: coverage-baseline
+          path: coverage-baseline
+        continue-on-error: true
+
+      - name: Coverage report with delta
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          file-coverage-mode: changes
+          pr-number: ${{ github.event.pull_request.number }}
+          json-summary-compare-path: ${{ steps.download-coverage-baseline.outcome == 'success' && 'coverage-baseline/coverage-summary.json' || '' }}
+          threshold-icons: "{0: '🔴', 70: '🟡', 75: '🔵', 85: '🟢'}"
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        timeout-minutes: 1
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        timeout-minutes: 1
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        timeout-minutes: 1
+        run: npm ci
+
+      - name: Install Playwright browsers
+        timeout-minutes: 1
+        run: npx playwright install --with-deps chromium-headless-shell
+
+      - name: Run E2E tests
+        timeout-minutes: 3
+        run: npm run test:e2e
+
+  storybook-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        timeout-minutes: 1
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        timeout-minutes: 1
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        timeout-minutes: 1
+        run: npm ci
+
+      - name: Install Playwright browsers
+        timeout-minutes: 1
+        run: npx playwright install --with-deps chromium-headless-shell
+
+      - name: Run storybook tests
+        timeout-minutes: 1
+        run: npm run test:storybook
+
+  manual-test-pr:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - run: npm run build -- --base=/codiflo/pr-${{ github.event.pull_request.number }}/
+
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
+          external_repository: pedropaulovc/pedropaulovc.github.io
+          publish_dir: ./dist
+          destination_dir: codiflo/pr-${{ github.event.pull_request.number }}
+
+      - name: Find Comment
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: 'Preview Deployment'
+
+      - name: Comment on PR
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ## Preview Deployment
+
+            :rocket: **Preview:** https://gh.vza.net/codiflo/pr-${{ github.event.pull_request.number }}/
+
+            _Updated for commit ${{ github.event.pull_request.head.sha }}_
+          edit-mode: replace
+
+  manual-test-pr-clean:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: pedropaulovc/pedropaulovc.github.io
+          ref: gh-pages
+          token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
+
+      - name: Remove preview directory
+        run: |
+          if [ -d "codiflo/pr-${{ github.event.pull_request.number }}" ]; then
+            rm -rf codiflo/pr-${{ github.event.pull_request.number }}
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "Clean up codiflo PR #${{ github.event.pull_request.number }} preview" || echo "Nothing to commit"
+            git push
+          fi
