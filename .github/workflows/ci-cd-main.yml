@@ -1,4 +1,4 @@
-name: CD Main
+name: CI/CD Main
 
 permissions:
   contents: read
