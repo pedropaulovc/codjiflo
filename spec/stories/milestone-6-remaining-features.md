@@ -4,9 +4,7 @@
 
 **Horizontal Requirements**:
 - **Test Coverage**: 70% coverage.
-- **Accessibility**: Status changes and real-time alerts must be announced via ARIA live regions. Settings pannels must be fully accessible.
-
-- **Accessibility**: Status changes and real-time alerts must be announced via ARIA live regions. Settings pannels must be fully accessible.
+- **Accessibility**: Status changes and real-time alerts must be announced via ARIA live regions. Settings panels must be fully accessible.
 
 - **Accessibility**: Status changes and real-time alerts must be announced via ARIA live regions. Settings pannels must be fully accessible.
 

@@ -7,8 +7,6 @@
 - **E2E Testing**: Launch via Playwright/Puppeteer with extension loading capabilities.
 - **Accessibility**: Injected buttons must match GitHub's accessibility standards (focus rings, aria labels).
 
-- **Accessibility**: Injected buttons must match GitHub's accessibility standards (focus rings, aria labels).
-
 ## Architecture & Scaffolding
 *Implementation must follow `spec/ARCHITECTURE.md`. Focus on `features/extension` and Manifest generation.*
 

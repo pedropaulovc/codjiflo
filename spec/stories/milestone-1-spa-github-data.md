@@ -11,8 +11,6 @@
   - Screen reader support (ARIA labels, roles).
   - High Contrast mode support (verified with OS settings or CSS media queries).
 
-  - High Contrast mode support (verified with OS settings or CSS media queries).
-
 ## Architecture & Scaffolding
 *Implementation must follow `spec/ARCHITECTURE.md`.*
 

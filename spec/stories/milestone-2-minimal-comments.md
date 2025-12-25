@@ -1,6 +1,6 @@
 # Milestone 2: Minimal Commenting Capabilities
 
-**Goal**: accurate replicate GitHub's commenting experience within the SPA, allowing users to view, add, reply to, and manage comments on code diffs.
+**Goal**: accurately replicate GitHub's commenting experience within the SPA, allowing users to view, add, reply to, and manage comments on code diffs.
 
 **Horizontal Requirements** (Applies to all stories):
 - **Test Coverage**: Minimum 70% unit test coverage.
@@ -8,8 +8,6 @@
 - **Accessibility**:
   - Comment buttons and threads are keyboard accessible.
   - Screen readers announce comment author, timestamp, and content.
-  - ARIA live regions for successful comment posting.
-
   - ARIA live regions for successful comment posting.
 
 ## Architecture & Scaffolding

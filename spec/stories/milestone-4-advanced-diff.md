@@ -6,8 +6,6 @@
 - **Test Coverage**: 70% coverage. Complex diff logic (Word-level algorithms) requires comprehensive unit tests.
 - **Accessiblity**: Screen reader support for side-by-side view (announcing "Left side" vs "Right side" context).
 
-- **Accessiblity**: Screen reader support for side-by-side view (announcing "Left side" vs "Right side" context).
-
 ## Architecture & Scaffolding
 *Implementation must follow `spec/ARCHITECTURE.md`. Focus on `workers/diff-worker.ts`.*
 
@@ -91,7 +89,7 @@ As a reviewer, I want to compare "Last Reviewed" vs "Latest" so I only see what'
 Provide a selector mechanism to choose:
 - **Base**: (Defaults to Target Branch / Main).
 - **Head**: (Defaults to Source Branch / Latest).
-Allow user to change unique combination (e.g., Compare Commit A vs Commit B).
+Allow user to change any combination (e.g., Compare Commit A vs Commit B).
 
 ### Acceptance Criteria
 1.  **UI Controls**:
