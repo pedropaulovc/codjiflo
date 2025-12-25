@@ -11,6 +11,8 @@ vi.mock('./github-client', () => ({
 
 describe('GitHubFileBackend', () => {
   let backend: GitHubFileBackend;
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  const mockFetch = vi.mocked(githubClient.fetch);
 
   beforeEach(() => {
     backend = new GitHubFileBackend();
@@ -30,11 +32,11 @@ describe('GitHubFileBackend', () => {
         },
       ];
 
-      vi.mocked(githubClient.fetch).mockResolvedValue(mockFiles);
+      mockFetch.mockResolvedValue(mockFiles);
 
       const result = await backend.getFiles('owner', 'repo', 42);
 
-      expect(githubClient.fetch).toHaveBeenCalledWith('/repos/owner/repo/pulls/42/files');
+      expect(mockFetch).toHaveBeenCalledWith('/repos/owner/repo/pulls/42/files');
       expect(result).toEqual([
         {
           filename: 'src/index.ts',
@@ -49,18 +51,18 @@ describe('GitHubFileBackend', () => {
 
     it('maps added status correctly', async () => {
       const mockFiles = [{ filename: 'new.ts', status: 'added', additions: 10, deletions: 0, changes: 10 }];
-      vi.mocked(githubClient.fetch).mockResolvedValue(mockFiles);
+      mockFetch.mockResolvedValue(mockFiles);
 
-      const result = await backend.getFiles('owner', 'repo', 1);
-      expect(result[0].status).toBe(FileChangeStatus.Added);
+      const [first] = await backend.getFiles('owner', 'repo', 1);
+      expect(first?.status).toBe(FileChangeStatus.Added);
     });
 
     it('maps removed status correctly', async () => {
       const mockFiles = [{ filename: 'old.ts', status: 'removed', additions: 0, deletions: 10, changes: 10 }];
-      vi.mocked(githubClient.fetch).mockResolvedValue(mockFiles);
+      mockFetch.mockResolvedValue(mockFiles);
 
-      const result = await backend.getFiles('owner', 'repo', 1);
-      expect(result[0].status).toBe(FileChangeStatus.Deleted);
+      const [first] = await backend.getFiles('owner', 'repo', 1);
+      expect(first?.status).toBe(FileChangeStatus.Deleted);
     });
 
     it('maps renamed status correctly', async () => {
@@ -74,19 +76,19 @@ describe('GitHubFileBackend', () => {
           changes: 0,
         },
       ];
-      vi.mocked(githubClient.fetch).mockResolvedValue(mockFiles);
+      mockFetch.mockResolvedValue(mockFiles);
 
-      const result = await backend.getFiles('owner', 'repo', 1);
-      expect(result[0].status).toBe(FileChangeStatus.Renamed);
-      expect(result[0].previousFilename).toBe('old-name.ts');
+      const [first] = await backend.getFiles('owner', 'repo', 1);
+      expect(first?.status).toBe(FileChangeStatus.Renamed);
+      expect(first?.previousFilename).toBe('old-name.ts');
     });
 
     it('handles missing patch', async () => {
       const mockFiles = [{ filename: 'binary.png', status: 'modified', additions: 0, deletions: 0, changes: 0 }];
-      vi.mocked(githubClient.fetch).mockResolvedValue(mockFiles);
+      mockFetch.mockResolvedValue(mockFiles);
 
-      const result = await backend.getFiles('owner', 'repo', 1);
-      expect(result[0].patch).toBe('');
+      const [first] = await backend.getFiles('owner', 'repo', 1);
+      expect(first?.patch).toBe('');
     });
   });
 });

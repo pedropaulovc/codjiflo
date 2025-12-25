@@ -11,6 +11,8 @@ vi.mock('./github-client', () => ({
 
 describe('GitHubReviewBackend', () => {
   let backend: GitHubReviewBackend;
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  const mockFetch = vi.mocked(githubClient.fetch);
 
   beforeEach(() => {
     backend = new GitHubReviewBackend();
@@ -39,11 +41,11 @@ describe('GitHubReviewBackend', () => {
         updated_at: '2024-01-02T00:00:00Z',
       };
 
-      vi.mocked(githubClient.fetch).mockResolvedValue(mockPR);
+      mockFetch.mockResolvedValue(mockPR);
 
       const result = await backend.getReview('owner', 'repo', 42);
 
-      expect(githubClient.fetch).toHaveBeenCalledWith('/repos/owner/repo/pulls/42');
+      expect(mockFetch).toHaveBeenCalledWith('/repos/owner/repo/pulls/42');
       expect(result).toEqual({
         id: 123,
         number: 42,
@@ -80,7 +82,7 @@ describe('GitHubReviewBackend', () => {
         updated_at: '2024-01-01T00:00:00Z',
       };
 
-      vi.mocked(githubClient.fetch).mockResolvedValue(mockPR);
+      mockFetch.mockResolvedValue(mockPR);
 
       const result = await backend.getReview('owner', 'repo', 1);
       expect(result.state).toBe(ReviewState.Closed);
@@ -103,7 +105,7 @@ describe('GitHubReviewBackend', () => {
         updated_at: '2024-01-01T00:00:00Z',
       };
 
-      vi.mocked(githubClient.fetch).mockResolvedValue(mockPR);
+      mockFetch.mockResolvedValue(mockPR);
 
       const result = await backend.getReview('owner', 'repo', 1);
       expect(result.state).toBe(ReviewState.Merged);
@@ -126,7 +128,7 @@ describe('GitHubReviewBackend', () => {
         updated_at: '2024-01-01T00:00:00Z',
       };
 
-      vi.mocked(githubClient.fetch).mockResolvedValue(mockPR);
+      mockFetch.mockResolvedValue(mockPR);
 
       const result = await backend.getReview('owner', 'repo', 1);
       expect(result.state).toBe(ReviewState.Draft);

@@ -3,10 +3,24 @@ import { render, screen } from '@/tests/helpers';
 import { DiffLine } from './DiffLine';
 import type { ParsedDiffLine } from '../types';
 
-// Mock the syntax highlighter to avoid complex output
-vi.mock('../utils', () => ({
-  highlightSyntax: (code: string) => code,
-}));
+// Mock react-syntax-highlighter - factory must use inline function
+vi.mock('react-syntax-highlighter', async () => {
+  const React = await import('react');
+  const MockComponent = ({ children }: { children: string }) =>
+    React.createElement('span', { 'data-testid': 'syntax-highlighter' }, children);
+  MockComponent.registerLanguage = vi.fn();
+  return { Light: MockComponent };
+});
+
+// Mock language imports
+vi.mock('react-syntax-highlighter/dist/esm/languages/hljs/typescript', () => ({ default: {} }));
+vi.mock('react-syntax-highlighter/dist/esm/languages/hljs/javascript', () => ({ default: {} }));
+vi.mock('react-syntax-highlighter/dist/esm/languages/hljs/python', () => ({ default: {} }));
+vi.mock('react-syntax-highlighter/dist/esm/languages/hljs/json', () => ({ default: {} }));
+vi.mock('react-syntax-highlighter/dist/esm/languages/hljs/css', () => ({ default: {} }));
+vi.mock('react-syntax-highlighter/dist/esm/languages/hljs/xml', () => ({ default: {} }));
+vi.mock('react-syntax-highlighter/dist/esm/languages/hljs/bash', () => ({ default: {} }));
+vi.mock('react-syntax-highlighter/dist/esm/languages/hljs/markdown', () => ({ default: {} }));
 
 describe('DiffLine', () => {
   it('renders header line', () => {
@@ -126,5 +140,24 @@ describe('DiffLine', () => {
     );
 
     expect(screen.getByText('Deleted:')).toBeInTheDocument();
+  });
+
+  it('uses SyntaxHighlighter for non-header lines', () => {
+    const line: ParsedDiffLine = {
+      type: 'addition',
+      content: 'const x = 1;',
+      oldLineNumber: null,
+      newLineNumber: 1,
+    };
+
+    render(
+      <table>
+        <tbody>
+          <DiffLine line={line} language="typescript" />
+        </tbody>
+      </table>
+    );
+
+    expect(screen.getByTestId('syntax-highlighter')).toBeInTheDocument();
   });
 });

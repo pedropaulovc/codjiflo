@@ -1,7 +1,25 @@
-import { useMemo } from 'react';
+import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
+import typescript from 'react-syntax-highlighter/dist/esm/languages/hljs/typescript';
+import javascript from 'react-syntax-highlighter/dist/esm/languages/hljs/javascript';
+import python from 'react-syntax-highlighter/dist/esm/languages/hljs/python';
+import json from 'react-syntax-highlighter/dist/esm/languages/hljs/json';
+import css from 'react-syntax-highlighter/dist/esm/languages/hljs/css';
+import xml from 'react-syntax-highlighter/dist/esm/languages/hljs/xml';
+import bash from 'react-syntax-highlighter/dist/esm/languages/hljs/bash';
+import markdown from 'react-syntax-highlighter/dist/esm/languages/hljs/markdown';
 import type { ParsedDiffLine } from '../types';
-import { highlightSyntax } from '../utils';
 import { cn } from '@/utils/cn';
+
+// Register languages for syntax highlighting
+SyntaxHighlighter.registerLanguage('typescript', typescript);
+SyntaxHighlighter.registerLanguage('javascript', javascript);
+SyntaxHighlighter.registerLanguage('python', python);
+SyntaxHighlighter.registerLanguage('json', json);
+SyntaxHighlighter.registerLanguage('css', css);
+SyntaxHighlighter.registerLanguage('xml', xml);
+SyntaxHighlighter.registerLanguage('html', xml);
+SyntaxHighlighter.registerLanguage('bash', bash);
+SyntaxHighlighter.registerLanguage('markdown', markdown);
 
 interface DiffLineProps {
   line: ParsedDiffLine;
@@ -29,17 +47,22 @@ const LINE_MARKERS = {
   header: '',
 };
 
+// Custom style to match diff view - minimal styling, let parent handle background
+const codeStyle: React.CSSProperties = {
+  margin: 0,
+  padding: 0,
+  background: 'transparent',
+  fontSize: '0.875rem',
+  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+  whiteSpace: 'pre',
+  overflow: 'visible',
+};
+
 /**
  * Single line in the unified diff view
  * S-1.4: AC-1.4.1 through AC-1.4.10
  */
 export function DiffLine({ line, language }: DiffLineProps) {
-  // AC-1.4.5: Syntax highlighting
-  const highlightedCode = useMemo(() => {
-    if (line.type === 'header') return line.content;
-    return highlightSyntax(line.content, language);
-  }, [line.content, line.type, language]);
-
   return (
     <tr className={cn('hover:brightness-95', LINE_STYLES[line.type])}>
       {/* AC-1.4.4: Line numbers */}
@@ -66,17 +89,25 @@ export function DiffLine({ line, language }: DiffLineProps) {
       </td>
 
       {/* AC-1.4.9: Screen reader accessible */}
-      <td className="py-0.5 overflow-hidden">
+      <td className="py-0.5 overflow-hidden pl-2 pr-4">
         <span className="sr-only">
           {line.type === 'addition' && 'Added: '}
           {line.type === 'deletion' && 'Deleted: '}
         </span>
-        {/* AC-1.4.6: Preserve indentation */}
-        <pre className="font-mono text-sm whitespace-pre pl-2 pr-4">
-          <code
-            dangerouslySetInnerHTML={{ __html: highlightedCode }}
-          />
-        </pre>
+        {/* AC-1.4.5: Syntax highlighting, AC-1.4.6: Preserve indentation */}
+        {line.type === 'header' ? (
+          <pre className="font-mono text-sm whitespace-pre m-0">{line.content}</pre>
+        ) : (
+          <SyntaxHighlighter
+            language={language}
+            useInlineStyles={true}
+            customStyle={codeStyle}
+            PreTag="span"
+            CodeTag="span"
+          >
+            {line.content}
+          </SyntaxHighlighter>
+        )}
       </td>
     </tr>
   );
