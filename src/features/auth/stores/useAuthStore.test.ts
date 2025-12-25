@@ -34,8 +34,11 @@ describe('useAuthStore', () => {
     it('should persist state to localStorage', () => {
         useAuthStore.getState().setToken('persisted-token');
 
-        const storageValue = JSON.parse(localStorage.getItem('auth-storage') || '{}');
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const storageValue = JSON.parse(localStorage.getItem('auth-storage') ?? '{}');
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         expect(storageValue.state.token).toBe('persisted-token');
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         expect(storageValue.state.isAuthenticated).toBe(true);
     });
 });
