@@ -41,14 +41,14 @@ test.describe("Authentication Flow (S-1.1)", () => {
     // [AC-1.1.4] Should navigate to dashboard after successful auth
     await expect(page).toHaveURL(/.*\/dashboard/);
     await expect(
-      page.getByRole("heading", { name: /Dashboard/i })
+      page.getByRole("heading", { name: /View Pull Request/i })
     ).toBeVisible();
 
     // [AC-1.1.5] Token persistence - reload should keep user authenticated
     await page.reload();
     await expect(page).toHaveURL(/.*\/dashboard/);
     await expect(
-      page.getByRole("heading", { name: /Dashboard/i })
+      page.getByRole("heading", { name: /View Pull Request/i })
     ).toBeVisible();
   });
 

@@ -1,0 +1,41 @@
+/**
+ * GitHub API response types
+ * These are GitHub-specific and get mapped to platform-agnostic types
+ */
+
+export interface GitHubUser {
+  id: number;
+  login: string;
+  avatar_url: string;
+}
+
+export interface GitHubBranch {
+  ref: string;
+  sha: string;
+}
+
+export interface GitHubPullRequest {
+  id: number;
+  number: number;
+  title: string;
+  body: string | null;
+  state: 'open' | 'closed';
+  merged: boolean;
+  draft: boolean;
+  user: GitHubUser;
+  head: GitHubBranch;
+  base: GitHubBranch;
+  html_url: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GitHubFile {
+  filename: string;
+  status: 'added' | 'modified' | 'removed' | 'renamed' | 'copied' | 'changed' | 'unchanged';
+  additions: number;
+  deletions: number;
+  changes: number;
+  patch?: string;
+  previous_filename?: string;
+}
