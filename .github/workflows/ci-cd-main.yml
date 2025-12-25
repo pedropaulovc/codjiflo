@@ -7,6 +7,10 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
+
 jobs:
   coverage-baseline:
     runs-on: ubuntu-latest
