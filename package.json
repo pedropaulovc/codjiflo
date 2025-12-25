@@ -24,8 +24,11 @@
     "test:all": "npm run lint && npm run typecheck && npm run test:coverage && npm run test:e2e && npm run test:storybook"
   },
   "dependencies": {
+    "clsx": "^2.1.1",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
+    "react-router-dom": "^7.11.0",
+    "tailwind-merge": "^3.4.0",
     "zustand": "^5.0.9"
   },
   "devDependencies": {
