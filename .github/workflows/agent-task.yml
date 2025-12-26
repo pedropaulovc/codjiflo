@@ -12,6 +12,6 @@
 
         - name: Create agent task
           env:
-            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GH_TOKEN: ${{ secrets.COPILOT_AGENT_SUBMIT_PAT }}
           run: |
             gh agent-task create "Delete issue_comments.json and inline_comments.json"
