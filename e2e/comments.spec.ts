@@ -95,9 +95,9 @@ test.describe("Inline comments flow (S-2.x)", () => {
     await page.getByText("const added = true;").hover();
     await page.getByRole("button", { name: "Add comment" }).first().click();
 
-    const editor = page.getByLabel("Add comment");
+    const editor = page.getByRole("textbox", { name: "Add comment" });
     await editor.fill("Adding a new inline comment.");
-    await page.getByRole("button", { name: "Comment" }).click();
+    await page.getByRole("button", { name: "Comment", exact: true }).click();
 
     await expect(page.getByText("Adding a new inline comment.")).toBeVisible();
   });

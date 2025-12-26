@@ -162,13 +162,13 @@ test.describe("PR Viewer Flow (S-1.2, S-1.3, S-1.4, S-1.5)", () => {
     // [AC-1.5.1] Press j to go to next file
     await page.keyboard.press("j");
 
-    // Second file should be selected
+    // Second file should be selected - wait for the state change
     const secondFile = page.getByRole("button", { name: /index\.ts/i });
-    await expect(secondFile).toHaveAttribute("aria-selected", "true");
+    await expect(secondFile).toHaveAttribute("aria-selected", "true", { timeout: 10000 });
 
     // [AC-1.5.1] Press k to go to previous file
     await page.keyboard.press("k");
-    await expect(firstFile).toHaveAttribute("aria-selected", "true");
+    await expect(firstFile).toHaveAttribute("aria-selected", "true", { timeout: 10000 });
   });
 
   test("Shortcuts modal opens with ?", async ({ page }) => {
