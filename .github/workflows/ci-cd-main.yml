@@ -53,7 +53,7 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run build -- --base=/codjiflo/
+      - run: npm run build -- --base=/codjiflo/main/  --sourcemap
 
       - uses: peaceiris/actions-gh-pages@v4
         with:
