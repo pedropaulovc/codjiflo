@@ -1,0 +1,17 @@
+  name: Delete Comment Files
+
+  on:
+    workflow_dispatch:
+
+  jobs:
+    delete-comments:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+
+        - name: Create agent task
+          env:
+            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          run: |
+            gh agent-task create "Delete issue_comments.json and inline_comments.json"
