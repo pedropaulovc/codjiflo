@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useDiffStore } from '../stores';
-import { parsePatch, detectLanguage } from '../utils';
+import { parsePatch, detectLanguage, getDiffLinePosition } from '../utils';
 import { DiffLine } from './DiffLine';
 import { Skeleton } from '@/components/ui';
+import { CommentEditor, CommentThread, useCommentsStore } from '@/features/comments';
 
 /**
  * Unified diff view for the selected file
@@ -10,6 +11,19 @@ import { Skeleton } from '@/components/ui';
  */
 export function DiffView() {
   const { files, selectedFileIndex, isLoading } = useDiffStore();
+  const {
+    threads,
+    isLoading: isLoadingComments,
+    error: commentsError,
+    announcement,
+    currentUser,
+    addComment,
+    addReply,
+    editComment,
+    deleteComment,
+    toggleResolved,
+    clearAnnouncement,
+  } = useCommentsStore();
   const selectedFile = files[selectedFileIndex];
 
   // Parse the patch and detect language
@@ -24,6 +38,35 @@ export function DiffView() {
       language: detectLanguage(filename ?? ''),
     };
   }, [patch, filename]);
+
+  const threadsForFile = useMemo(() => {
+    if (!filename) return [];
+    return threads
+      .filter((thread) => thread.path === filename)
+      .sort(
+        (a, b) =>
+          (a.comments[0]?.createdAt.getTime() ?? 0) -
+          (b.comments[0]?.createdAt.getTime() ?? 0)
+      );
+  }, [threads, filename]);
+
+  const threadsByKey = useMemo(() => {
+    const map = new Map<string, typeof threadsForFile>();
+    threadsForFile.forEach((thread) => {
+      const key = `${String(thread.line)}-${thread.side}`;
+      const existing = map.get(key) ?? [];
+      map.set(key, [...existing, thread]);
+    });
+    return map;
+  }, [threadsForFile]);
+
+  useEffect(() => {
+    if (!announcement) return;
+    const timer = window.setTimeout(() => {
+      clearAnnouncement();
+    }, 4000);
+    return () => window.clearTimeout(timer);
+  }, [announcement, clearAnnouncement]);
 
   if (isLoading) {
     return (
@@ -54,6 +97,9 @@ export function DiffView() {
 
   return (
     <div className="h-full flex flex-col">
+      <div className="sr-only" role="status" aria-live="polite">
+        {announcement}
+      </div>
       {/* Sticky file header */}
       <div className="sticky top-0 bg-gray-100 px-4 py-2 border-b z-10">
         <h2 className="font-mono text-sm font-semibold truncate" title={selectedFile.filename}>
@@ -69,18 +115,147 @@ export function DiffView() {
         aria-label={`Diff content for ${selectedFile.filename}`}
         tabIndex={0}
       >
-        <table className="w-full border-collapse text-sm">
-          <tbody>
-            {diffLines.map((line, index) => (
-              <DiffLine
-                key={index}
-                line={line}
-                language={language}
-              />
-            ))}
-          </tbody>
-        </table>
+        {commentsError && (
+          <div className="px-4 py-2 text-sm text-red-600 bg-red-50 border-b border-red-100">
+            {commentsError}
+          </div>
+        )}
+        {isLoadingComments && (
+          <div className="px-4 py-2 text-sm text-gray-500 border-b border-gray-100">
+            Loading comments...
+          </div>
+        )}
+        <DiffTable
+          key={filename ?? 'diff-table'}
+          diffLines={diffLines}
+          language={language}
+          filename={filename}
+          threadsByKey={threadsByKey}
+          currentUserLogin={currentUser.login}
+          addComment={addComment}
+          addReply={addReply}
+          editComment={editComment}
+          deleteComment={deleteComment}
+          toggleResolved={toggleResolved}
+        />
       </div>
     </div>
+  );
+}
+
+interface DiffTableProps {
+  diffLines: ReturnType<typeof parsePatch>;
+  language: string;
+  filename: string | undefined;
+  threadsByKey: Map<string, ReturnType<typeof useCommentsStore.getState>['threads']>;
+  currentUserLogin: string;
+  addComment: ReturnType<typeof useCommentsStore.getState>['addComment'];
+  addReply: ReturnType<typeof useCommentsStore.getState>['addReply'];
+  editComment: ReturnType<typeof useCommentsStore.getState>['editComment'];
+  deleteComment: ReturnType<typeof useCommentsStore.getState>['deleteComment'];
+  toggleResolved: ReturnType<typeof useCommentsStore.getState>['toggleResolved'];
+}
+
+function DiffTable({
+  diffLines,
+  language,
+  filename,
+  threadsByKey,
+  currentUserLogin,
+  addComment,
+  addReply,
+  editComment,
+  deleteComment,
+  toggleResolved,
+}: DiffTableProps) {
+  const [draftLineIndex, setDraftLineIndex] = useState<number | null>(null);
+  const [draftBody, setDraftBody] = useState('');
+  const [isSubmittingDraft, setIsSubmittingDraft] = useState(false);
+
+  return (
+    <table className="w-full border-collapse text-sm">
+      <tbody>
+        {diffLines.map((line, index) => {
+          const leftKey = line.oldLineNumber ? `${String(line.oldLineNumber)}-LEFT` : null;
+          const rightKey = line.newLineNumber ? `${String(line.newLineNumber)}-RIGHT` : null;
+          const lineThreads = [
+            ...(leftKey ? threadsByKey.get(leftKey) ?? [] : []),
+            ...(rightKey ? threadsByKey.get(rightKey) ?? [] : []),
+          ];
+          const showCommentButton = line.type !== 'header';
+
+          return (
+            <Fragment key={`${String(index)}-${line.type}`}>
+              <DiffLine
+                line={line}
+                language={language}
+                showCommentButton={showCommentButton}
+                onStartComment={() => {
+                  setDraftLineIndex(index);
+                  setDraftBody('');
+                }}
+              />
+              {draftLineIndex === index && (
+                <tr>
+                  <td colSpan={4} className="bg-gray-50 px-8 py-4">
+                    <CommentEditor
+                      value={draftBody}
+                      onChange={setDraftBody}
+                      onSubmit={() => {
+                        void (async () => {
+                          const targetLine = diffLines[index];
+                          const side = targetLine?.type === 'deletion' ? 'LEFT' : 'RIGHT';
+                          const lineNumber =
+                            side === 'LEFT'
+                              ? targetLine?.oldLineNumber
+                              : targetLine?.newLineNumber;
+                          const position = getDiffLinePosition(diffLines, index);
+
+                          if (!targetLine || !lineNumber || !filename) {
+                            return;
+                          }
+
+                          setIsSubmittingDraft(true);
+                          await addComment({
+                            path: filename,
+                            line: lineNumber,
+                            side,
+                            body: draftBody.trim(),
+                            position,
+                          });
+                          setIsSubmittingDraft(false);
+                          setDraftLineIndex(null);
+                          setDraftBody('');
+                        })();
+                      }}
+                      onCancel={() => {
+                        setDraftLineIndex(null);
+                        setDraftBody('');
+                      }}
+                      isSubmitting={isSubmittingDraft}
+                      label="Add comment"
+                    />
+                  </td>
+                </tr>
+              )}
+              {lineThreads.map((thread) => (
+                <tr key={`thread-${thread.id}`}>
+                  <td colSpan={4} className="bg-gray-50 px-8 py-4">
+                    <CommentThread
+                      thread={thread}
+                      currentUserLogin={currentUserLogin}
+                      onReply={addReply}
+                      onEdit={editComment}
+                      onDelete={deleteComment}
+                      onToggleResolved={toggleResolved}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </Fragment>
+          );
+        })}
+      </tbody>
+    </table>
   );
 }
