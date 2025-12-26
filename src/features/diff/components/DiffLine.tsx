@@ -9,6 +9,7 @@ import bash from 'react-syntax-highlighter/dist/esm/languages/hljs/bash';
 import markdown from 'react-syntax-highlighter/dist/esm/languages/hljs/markdown';
 import type { ParsedDiffLine } from '../types';
 import { cn } from '@/utils/cn';
+import { Button } from '@/components';
 
 // Register languages for syntax highlighting
 SyntaxHighlighter.registerLanguage('typescript', typescript);
@@ -24,6 +25,8 @@ SyntaxHighlighter.registerLanguage('markdown', markdown);
 interface DiffLineProps {
   line: ParsedDiffLine;
   language: string;
+  onStartComment?: () => void;
+  showCommentButton?: boolean;
 }
 
 const LINE_STYLES = {
@@ -62,9 +65,9 @@ const codeStyle: React.CSSProperties = {
  * Single line in the unified diff view
  * S-1.4: AC-1.4.1 through AC-1.4.10
  */
-export function DiffLine({ line, language }: DiffLineProps) {
+export function DiffLine({ line, language, onStartComment, showCommentButton = false }: DiffLineProps) {
   return (
-    <tr className={cn('hover:brightness-95', LINE_STYLES[line.type])}>
+    <tr className={cn('group hover:brightness-95', LINE_STYLES[line.type])}>
       {/* AC-1.4.4: Line numbers */}
       <td
         className={cn(
@@ -84,8 +87,19 @@ export function DiffLine({ line, language }: DiffLineProps) {
       </td>
 
       {/* AC-1.4.10: +/- markers for accessibility */}
-      <td className="px-1 py-0.5 text-center select-none w-6 text-xs font-mono" aria-hidden="true">
+      <td className="relative px-1 py-0.5 text-center select-none w-8 text-xs font-mono" aria-hidden="true">
         {LINE_MARKERS[line.type]}
+        {showCommentButton && onStartComment && (
+          <div className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100">
+            <Button
+              label="+"
+              variant="secondary"
+              size="icon"
+              ariaLabel="Add comment"
+              onClick={onStartComment}
+            />
+          </div>
+        )}
       </td>
 
       {/* AC-1.4.9: Screen reader accessible */}

@@ -39,3 +39,16 @@ export interface GitHubFile {
   patch?: string;
   previous_filename?: string;
 }
+
+export interface GitHubReviewComment {
+  id: number;
+  body: string;
+  user: GitHubUser;
+  created_at: string;
+  updated_at: string;
+  path: string;
+  line: number | null;
+  side: "LEFT" | "RIGHT";
+  position: number | null;
+  in_reply_to_id?: number;
+}

@@ -4,6 +4,7 @@ import { usePRStore } from '@/features/pr';
 import { useDiffStore, FileList, DiffView } from '@/features/diff';
 import { PRHeader } from '@/features/pr/components';
 import { useKeyboardShortcuts, ShortcutsModal } from '@/features/keyboard';
+import { useCommentsStore } from '@/features/comments';
 
 /**
  * Pull Request View page
@@ -20,6 +21,7 @@ export function PullRequestView() {
 
   const { loadPR, reset: resetPR } = usePRStore();
   const { loadFiles, reset: resetDiff } = useDiffStore();
+  const { loadThreads, reset: resetComments } = useCommentsStore();
   const [showShortcuts, setShowShortcuts] = useState(false);
 
   // Activate keyboard shortcuts
@@ -52,16 +54,18 @@ export function PullRequestView() {
     const prNumber = parseInt(number, 10);
     if (isNaN(prNumber)) return;
 
-    // Load PR and files in parallel
+    // Load PR, files, and comments in parallel
     void loadPR(owner, repo, prNumber);
     void loadFiles(owner, repo, prNumber);
+    void loadThreads(owner, repo, prNumber);
 
     // Cleanup on unmount
     return () => {
       resetPR();
       resetDiff();
+      resetComments();
     };
-  }, [owner, repo, number, loadPR, loadFiles, resetPR, resetDiff]);
+  }, [owner, repo, number, loadPR, loadFiles, loadThreads, resetPR, resetDiff, resetComments]);
 
   const handleBackToDashboard = useCallback(() => {
     void navigate('/dashboard');
