@@ -32,20 +32,23 @@ const DEFAULT_CURRENT_USER: CommentAuthor = {
   avatarUrl: 'https://avatars.githubusercontent.com/u/583231?v=4',
 };
 
+let localIdCounter = 0;
+
 const createLocalId = () => {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
     return crypto.randomUUID();
   }
 
-  // Fallback with improved entropy using multiple random values and high-precision time
+  // Fallback with improved entropy using multiple random values, high-precision time, and counter
   const timePart = Date.now().toString(16);
   const perfPart =
     typeof performance !== 'undefined' && typeof performance.now === 'function'
       ? Math.floor(performance.now() * 1000).toString(16)
       : '';
   const randomPart = `${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`;
+  const counterPart = (localIdCounter++).toString(16);
 
-  return `${timePart}-${perfPart}-${randomPart}`;
+  return `${timePart}-${perfPart}-${randomPart}-${counterPart}`;
 };
 
 const mapGitHubComment = (comment: GitHubReviewComment): Comment => ({

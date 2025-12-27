@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDiffStore } from '../stores';
 import { parsePatch, detectLanguage, getDiffLinePosition } from '../utils';
 import { DiffLine } from './DiffLine';
@@ -59,7 +59,7 @@ export function DiffView() {
       });
   }, [threads, filename]);
 
-  const threadsByKey = useMemo(() => {
+  const threadsByLineAndSide = useMemo(() => {
     const map = new Map<string, typeof threadsForFile>();
     threadsForFile.forEach((thread) => {
       const key = `${String(thread.line)}-${thread.side}`;
@@ -139,7 +139,7 @@ export function DiffView() {
           diffLines={diffLines}
           language={language}
           filename={filename}
-          threadsByKey={threadsByKey}
+          threadsByLineAndSide={threadsByLineAndSide}
           currentUserLogin={currentUser.login}
           addComment={addComment}
           addReply={addReply}
@@ -158,7 +158,7 @@ interface DiffTableProps {
   diffLines: ReturnType<typeof parsePatch>;
   language: string;
   filename: string | undefined;
-  threadsByKey: Map<string, ThreadArray>;
+  threadsByLineAndSide: Map<string, ThreadArray>;
   currentUserLogin: string;
   addComment: ReturnType<typeof useCommentsStore.getState>['addComment'];
   addReply: ReturnType<typeof useCommentsStore.getState>['addReply'];
@@ -171,7 +171,7 @@ function DiffTable({
   diffLines,
   language,
   filename,
-  threadsByKey,
+  threadsByLineAndSide,
   currentUserLogin,
   addComment,
   addReply,
@@ -183,10 +183,11 @@ function DiffTable({
   const [draftBody, setDraftBody] = useState('');
   const [isSubmittingDraft, setIsSubmittingDraft] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const isSubmittingRef = useRef(false);
 
   const handleSubmitComment = useCallback(
     async (index: number, body: string) => {
-      if (isSubmittingDraft) return; // Prevent double submission
+      if (isSubmittingRef.current) return; // Prevent double submission
 
       const targetLine = diffLines[index];
       const side = targetLine?.type === 'deletion' ? 'LEFT' : 'RIGHT';
@@ -198,6 +199,7 @@ function DiffTable({
         return;
       }
 
+      isSubmittingRef.current = true;
       setIsSubmittingDraft(true);
       setSubmitError(null);
 
@@ -215,10 +217,11 @@ function DiffTable({
         const message = err instanceof Error ? err.message : 'Failed to post comment';
         setSubmitError(message);
       } finally {
+        isSubmittingRef.current = false;
         setIsSubmittingDraft(false);
       }
     },
-    [addComment, diffLines, filename, isSubmittingDraft]
+    [addComment, diffLines, filename]
   );
 
   return (
@@ -228,8 +231,8 @@ function DiffTable({
           const leftKey = line.oldLineNumber != null ? `${String(line.oldLineNumber)}-LEFT` : null;
           const rightKey = line.newLineNumber != null ? `${String(line.newLineNumber)}-RIGHT` : null;
           const lineThreads = [
-            ...(leftKey ? threadsByKey.get(leftKey) ?? [] : []),
-            ...(rightKey ? threadsByKey.get(rightKey) ?? [] : []),
+            ...(leftKey ? threadsByLineAndSide.get(leftKey) ?? [] : []),
+            ...(rightKey ? threadsByLineAndSide.get(rightKey) ?? [] : []),
           ];
           const showCommentButton = line.type !== 'header';
 
