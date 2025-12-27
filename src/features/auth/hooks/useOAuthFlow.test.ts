@@ -91,7 +91,7 @@ describe('useOAuthFlow', () => {
     const { generateCodeChallenge } = await import('../utils/pkce');
     vi.mocked(generateCodeChallenge).mockRejectedValueOnce(new Error('PKCE generation failed'));
 
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(vi.fn());
 
     const { result } = renderHook(() => useOAuthFlow());
 
@@ -112,7 +112,7 @@ describe('useOAuthFlow', () => {
     const { generateCodeChallenge } = await import('../utils/pkce');
     vi.mocked(generateCodeChallenge).mockRejectedValueOnce(new Error('Failed'));
 
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(vi.fn());
 
     const { result } = renderHook(() => useOAuthFlow());
 
