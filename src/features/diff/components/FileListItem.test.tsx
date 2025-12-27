@@ -55,7 +55,7 @@ describe('FileListItem', () => {
     render(<FileListItem file={file} isSelected={true} onClick={noop} />);
 
     const button = screen.getByRole('button');
-    expect(button).toHaveAttribute('aria-current', 'true');
+    expect(button).toHaveAttribute('aria-current', 'location');
     expect(button).toHaveClass('bg-blue-50');
   });
 
