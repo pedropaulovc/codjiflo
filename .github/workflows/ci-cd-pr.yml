@@ -57,6 +57,7 @@ jobs:
         run: npm run test:coverage
 
       - name: Download base coverage
+        if: always()
         id: download-coverage-baseline
         uses: dawidd6/action-download-artifact@v6
         with:
@@ -67,6 +68,7 @@ jobs:
         continue-on-error: true
 
       - name: Coverage report with delta
+        if: always()
         uses: davelosert/vitest-coverage-report-action@v2
         with:
           file-coverage-mode: changes
