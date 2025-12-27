@@ -67,7 +67,7 @@ const codeStyle: React.CSSProperties = {
  */
 export function DiffLine({ line, language, onStartComment, showCommentButton = false }: DiffLineProps) {
   return (
-    <tr className={cn('group hover:brightness-95', LINE_STYLES[line.type])}>
+    <tr className={cn('group hover:brightness-95', LINE_STYLES[line.type])} data-testid="diff-line">
       {/* AC-1.4.4: Line numbers */}
       <td
         className={cn(

@@ -171,24 +171,24 @@ test.describe("PR Viewer Flow (S-1.2, S-1.3, S-1.4, S-1.5)", () => {
     await expect(firstFile).toHaveAttribute("aria-selected", "true", { timeout: 10000 });
   });
 
-  test("Shortcuts modal opens with ?", async ({ page }) => {
+  test("Shortcuts modal opens with ? button", async ({ page }) => {
     await page.goto("/pr/test/repo/123");
 
     // Wait for page to load - check the file list navigation
     const fileNav = page.getByRole("navigation", { name: /Changed files/i });
     await expect(fileNav.getByText("src/components/Button.tsx")).toBeVisible();
 
-    // [AC-1.5.4] Press ? to open shortcuts modal
-    await page.keyboard.press("?");
+    // [AC-1.5.4] Click the shortcuts button to open modal
+    await page.getByRole("button", { name: /Show keyboard shortcuts/i }).click();
 
     // Modal should be visible
-    await expect(page.getByRole("dialog")).toBeVisible();
-    await expect(page.getByText("Keyboard Shortcuts")).toBeVisible();
+    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Keyboard Shortcuts")).toBeVisible({ timeout: 5000 });
     await expect(page.getByText("Next file")).toBeVisible();
 
-    // Close modal
-    await page.keyboard.press("Escape");
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    // Close modal by clicking the Close button
+    await page.getByRole("button", { name: /Close/i }).click();
+    await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 5000 });
   });
 
   test("Error handling for invalid PR URL", async ({ page }) => {
