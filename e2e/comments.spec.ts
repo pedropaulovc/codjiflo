@@ -90,19 +90,17 @@ test.describe("Inline comments flow (S-2.x)", () => {
   test("shows existing threads and allows adding a comment", async ({ page }) => {
     await page.goto("/pr/test/repo/123");
 
-    // Wait for the file list to be visible (indicates data has loaded)
+    // Wait for page to load - check the diff heading as a stable indicator
+    await expect(page.getByRole("heading", { name: "src/example.ts" })).toBeVisible({ timeout: 20000 });
+
+    // Wait for the file list item to be visible and selected
     const fileListItem = page.getByRole("button", { name: /src\/example\.ts/ });
-    await expect(fileListItem).toBeVisible({ timeout: 15000 });
-
-    // Verify the file is selected (has aria-selected)
-    await expect(fileListItem).toHaveAttribute("aria-selected", "true");
-
-    // Verify the diff file header is shown (use heading role to avoid ambiguity)
-    await expect(page.getByRole("heading", { name: "src/example.ts" })).toBeVisible();
+    await expect(fileListItem).toBeVisible({ timeout: 10000 });
+    await expect(fileListItem).toHaveAttribute("aria-selected", "true", { timeout: 5000 });
 
     // The diff content should be rendered in a table
     const diffTable = page.locator('table');
-    await expect(diffTable).toBeVisible();
+    await expect(diffTable).toBeVisible({ timeout: 10000 });
 
     // Verify the existing comment is displayed (comments load async)
     await expect(page.getByText("Please add a quick note about this flag.")).toBeVisible({ timeout: 15000 });
