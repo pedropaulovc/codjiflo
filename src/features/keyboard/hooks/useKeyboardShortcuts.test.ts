@@ -90,6 +90,42 @@ describe('useKeyboardShortcuts', () => {
 
     document.body.removeChild(textarea);
   });
+
+  it('scrolls diff region when space is pressed', () => {
+    renderHook(() => useKeyboardShortcuts());
+
+    // Create a mock diff region element
+    const diffRegion = document.createElement('div');
+    diffRegion.setAttribute('role', 'region');
+    diffRegion.setAttribute('aria-label', 'Diff content for test.ts');
+     
+    diffRegion.scrollBy = vi.fn();
+    document.body.appendChild(diffRegion);
+
+    // Mock window.innerHeight
+    Object.defineProperty(window, 'innerHeight', { value: 800, writable: true });
+
+    const event = new KeyboardEvent('keydown', { key: ' ' });
+    window.dispatchEvent(event);
+
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(diffRegion.scrollBy).toHaveBeenCalledWith({
+      top: 640, // 800 * 0.8
+      behavior: 'smooth',
+    });
+
+    document.body.removeChild(diffRegion);
+  });
+
+  it('does nothing when space is pressed without diff region', () => {
+    renderHook(() => useKeyboardShortcuts());
+
+    // Don't add a diff region element
+
+    // This should not throw
+    const event = new KeyboardEvent('keydown', { key: ' ' });
+    expect(() => window.dispatchEvent(event)).not.toThrow();
+  });
 });
 
 describe('getShortcutsList', () => {

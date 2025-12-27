@@ -91,6 +91,52 @@ describe('useDiffStore', () => {
 
       expect(useDiffStore.getState().selectedFileIndex).toBe(0);
     });
+
+    it('handles 404 error with specific message', async () => {
+      mockGetFiles.mockRejectedValue(new api.GitHubAPIError(404, 'Not Found', 'Not Found'));
+
+      await useDiffStore.getState().loadFiles('owner', 'repo', 123);
+
+      expect(useDiffStore.getState().error).toBe('Pull request not found');
+      expect(useDiffStore.getState().isLoading).toBe(false);
+      expect(useDiffStore.getState().files).toEqual([]);
+    });
+
+    it('handles 401 error with access denied message', async () => {
+      mockGetFiles.mockRejectedValue(new api.GitHubAPIError(401, 'Unauthorized', 'Unauthorized'));
+
+      await useDiffStore.getState().loadFiles('owner', 'repo', 123);
+
+      expect(useDiffStore.getState().error).toBe('Access denied');
+      expect(useDiffStore.getState().isLoading).toBe(false);
+    });
+
+    it('handles 403 error with access denied message', async () => {
+      mockGetFiles.mockRejectedValue(new api.GitHubAPIError(403, 'Forbidden', 'Forbidden'));
+
+      await useDiffStore.getState().loadFiles('owner', 'repo', 123);
+
+      expect(useDiffStore.getState().error).toBe('Access denied');
+      expect(useDiffStore.getState().isLoading).toBe(false);
+    });
+
+    it('handles other GitHub API errors with error message', async () => {
+      mockGetFiles.mockRejectedValue(new api.GitHubAPIError(500, 'Internal Server Error', 'Server error'));
+
+      await useDiffStore.getState().loadFiles('owner', 'repo', 123);
+
+      expect(useDiffStore.getState().error).toBe('Server error');
+      expect(useDiffStore.getState().isLoading).toBe(false);
+    });
+
+    it('handles generic errors with error message', async () => {
+      mockGetFiles.mockRejectedValue(new Error('Network failure'));
+
+      await useDiffStore.getState().loadFiles('owner', 'repo', 123);
+
+      expect(useDiffStore.getState().error).toBe('Network failure');
+      expect(useDiffStore.getState().isLoading).toBe(false);
+    });
   });
 
   describe('selectFile', () => {
