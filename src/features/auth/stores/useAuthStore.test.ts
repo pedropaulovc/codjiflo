@@ -194,12 +194,14 @@ describe('useAuthStore OAuth methods', () => {
         });
 
         it('should handle network errors', async () => {
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
             vi.mocked(global.fetch).mockRejectedValueOnce(new Error('Network error'));
 
             const result = await useAuthStore.getState().handleOAuthCallback('code', 'verifier');
 
             expect(result).toBe(false);
             expect(useAuthStore.getState().error).toBe('Failed to complete authentication');
+            consoleSpy.mockRestore();
         });
     });
 

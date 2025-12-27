@@ -39,7 +39,7 @@ export function FileListItem({ file, isSelected, onClick }: FileListItemProps) {
       <button
         onClick={onClick}
         type="button"
-        aria-selected={isSelected}
+        aria-current={isSelected ? 'location' : undefined}
         aria-label={`${file.filename}, ${CHANGE_TYPE_LABELS[file.status]}, ${String(file.additions)} additions, ${String(file.deletions)} deletions`}
         className={cn(
           'w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500',

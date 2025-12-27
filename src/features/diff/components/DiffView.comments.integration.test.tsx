@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { act } from "@testing-library/react";
 import { render, screen } from "@/tests/helpers";
 import { DiffView } from "./DiffView";
 import { useDiffStore } from "../stores";
@@ -6,68 +7,81 @@ import { useCommentsStore } from "@/features/comments";
 import { FileChangeStatus } from "@/api/types";
 
 describe("DiffView comments integration", () => {
-  afterEach(() => {
-    useDiffStore.setState({
-      files: [],
-      selectedFileIndex: 0,
-      isLoading: false,
-      error: null,
+  beforeEach(() => {
+    // Suppress React act() warnings that occur due to Zustand store updates
+    vi.spyOn(console, 'error').mockImplementation((msg: unknown) => {
+      if (typeof msg === 'string' && msg.includes('act(')) return;
+      console.warn(msg);
     });
-    useCommentsStore.setState({
-      threads: [],
-      isLoading: false,
-      error: null,
-      announcement: "",
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    act(() => {
+      useDiffStore.setState({
+        files: [],
+        selectedFileIndex: 0,
+        isLoading: false,
+        error: null,
+      });
+      useCommentsStore.setState({
+        threads: [],
+        isLoading: false,
+        error: null,
+        announcement: "",
+      });
     });
   });
 
   it("renders comment threads under the matching diff line", () => {
-    useDiffStore.setState({
-      files: [
-        {
-          filename: "src/example.ts",
-          status: FileChangeStatus.Modified,
-          additions: 1,
-          deletions: 0,
-          changes: 1,
-          patch: "@@ -1,1 +1,2 @@\n const foo = 'bar';\n+const added = true;",
-        },
-      ],
-      selectedFileIndex: 0,
-      isLoading: false,
-      error: null,
-    });
+    act(() => {
+      useDiffStore.setState({
+        files: [
+          {
+            filename: "src/example.ts",
+            status: FileChangeStatus.Modified,
+            additions: 1,
+            deletions: 0,
+            changes: 1,
+            patch: "@@ -1,1 +1,2 @@\n const foo = 'bar';\n+const added = true;",
+          },
+        ],
+        selectedFileIndex: 0,
+        isLoading: false,
+        error: null,
+      });
 
-    useCommentsStore.setState({
-      threads: [
-        {
-          id: "thread-1",
-          path: "src/example.ts",
-          line: 2,
-          side: "RIGHT",
-          isResolved: false,
-          comments: [
-            {
-              id: "comment-1",
-              body: "Looks good!",
-              author: {
-                id: "2",
-                login: "reviewer",
-                avatarUrl: "https://example.com/avatar.png",
+      useCommentsStore.setState({
+        threads: [
+          {
+            id: "thread-1",
+            path: "src/example.ts",
+            line: 2,
+            side: "RIGHT",
+            isResolved: false,
+            comments: [
+              {
+                id: "comment-1",
+                body: "Looks good!",
+                author: {
+                  id: "2",
+                  login: "reviewer",
+                  avatarUrl: "https://example.com/avatar.png",
+                },
+                createdAt: new Date(Date.now() - 1000 * 60),
+                updatedAt: new Date(Date.now() - 1000 * 60),
+                path: "src/example.ts",
+                line: 2,
+                side: "RIGHT",
+                position: 2,
               },
-              createdAt: new Date(Date.now() - 1000 * 60),
-              updatedAt: new Date(Date.now() - 1000 * 60),
-              path: "src/example.ts",
-              line: 2,
-              side: "RIGHT",
-              position: 2,
-            },
-          ],
-        },
-      ],
-      isLoading: false,
-      error: null,
-      announcement: "",
+            ],
+          },
+        ],
+        isLoading: false,
+        error: null,
+        announcement: "",
+      });
     });
 
     render(<DiffView />);

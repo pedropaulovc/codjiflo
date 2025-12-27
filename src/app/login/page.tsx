@@ -103,7 +103,7 @@ export default function LoginPage() {
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
-            Don't have a GitHub account?{' '}
+            Don&apos;t have a GitHub account?{' '}
             <a
               href="https://github.com/signup"
               target="_blank"
