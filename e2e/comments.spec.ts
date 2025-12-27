@@ -106,7 +106,7 @@ test.describe("Inline comments flow (S-2.x)", () => {
     // Wait for the file list item to be visible and selected
     const fileListItem = page.getByRole("button", { name: /src\/example\.ts/ });
     await expect(fileListItem).toBeVisible({ timeout: 10000 });
-    await expect(fileListItem).toHaveAttribute("aria-selected", "true", { timeout: 15000 });
+    await expect(fileListItem).toHaveAttribute("aria-current", "true", { timeout: 15000 });
 
     // The diff content should be rendered in a table
     const diffTable = page.locator('table');

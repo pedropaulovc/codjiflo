@@ -1,0 +1,47 @@
+// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
+import storybook from "eslint-plugin-storybook";
+
+import js from "@eslint/js";
+import globals from "globals";
+import reactRefresh from "eslint-plugin-react-refresh";
+import nextConfig from "eslint-config-next/core-web-vitals";
+import tseslint from "typescript-eslint";
+
+export default tseslint.config(
+  { ignores: ["dist", "storybook-static", "coverage", "e2e/**/*", ".storybook/**/*", "playwright-report", ".next/**/*", "next-env.d.ts"] },
+  // Next.js recommended config (includes React, React Hooks, and Next.js rules)
+  ...nextConfig,
+  // TypeScript strict checking
+  {
+    extends: [js.configs.recommended, ...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked],
+    files: ["**/*.{ts,tsx}"],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    plugins: {
+      "react-refresh": reactRefresh,
+    },
+    rules: {
+      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+      "@typescript-eslint/no-confusing-void-expression": "off",
+    },
+  },
+  {
+    // Allow metadata exports in Next.js layout/page files
+    files: ["src/app/**/layout.tsx", "src/app/**/page.tsx"],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
+  },
+  {
+    // Disable type-aware linting for config files
+    files: ["*.config.ts", "*.config.js", "*.config.mjs", "playwright.config.ts"],
+    extends: [tseslint.configs.disableTypeChecked],
+  },
+  ...storybook.configs["flat/recommended"]
+);

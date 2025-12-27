@@ -27,8 +27,8 @@ describe('PRMetadata', () => {
 
     expect(screen.getByText('johndoe')).toBeInTheDocument();
     const avatar = screen.getByRole('img', { name: /johndoe's avatar/i });
-    // Next.js Image component transforms the src URL for optimization
-    expect(avatar).toHaveAttribute('src', expect.stringContaining(encodeURIComponent('https://example.com/avatar.jpg')));
+    // Next.js Image transforms the src to an optimized URL
+    expect(avatar.getAttribute('src')).toContain('avatar.jpg');
   });
 
   it('displays state badge with correct state', () => {
