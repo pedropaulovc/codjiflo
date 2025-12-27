@@ -128,8 +128,11 @@ jobs:
         timeout-minutes: 1
         run: npm run test:storybook
 
-  build-check:
+  manual-tests:
     runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -140,9 +143,43 @@ jobs:
 
       - run: npm ci
 
-      - name: Build Next.js app
-        run: npm run build
-        env:
-          # Skip telemetry during build
-          NEXT_TELEMETRY_DISABLED: 1
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build with Vercel
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} --meta gitCommitSha=${{ github.sha }} --meta gitPrNumber=${{ github.event.pull_request.number }})
+          echo "url=$url" >> $GITHUB_OUTPUT
+
+      - name: Set deployment alias
+        run: |
+          vercel alias set ${{ steps.deploy.outputs.url }} pr-${{ github.event.pull_request.number }}.codjiflo.vza.net --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ secrets.VERCEL_ORG_ID }}
+
+      - name: Find Comment
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: 'Preview Deployment'
+
+      - name: Comment on PR
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ## Preview Deployment
+
+            :rocket: **Preview:** https://pr-${{ github.event.pull_request.number }}.codjiflo.vza.net
+
+            _Updated for commit ${{ github.event.pull_request.head.sha }}_
+          edit-mode: replace
 

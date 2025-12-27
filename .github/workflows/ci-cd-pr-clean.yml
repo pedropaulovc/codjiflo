@@ -14,20 +14,25 @@ concurrency:
 jobs:
   manual-tests-clean:
     runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: pedropaulovc/pedropaulovc.github.io
-          ref: gh-pages
-          token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
+      - name: Install Vercel CLI
+        run: npm install -g vercel
 
-      - name: Remove preview directory
+      - name: Remove Vercel alias
         run: |
-          if [ -d "codjiflo/pr-${{ github.event.pull_request.number }}" ]; then
-            rm -rf codjiflo/pr-${{ github.event.pull_request.number }}
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add -A
-            git commit -m "Clean up codjiflo PR #${{ github.event.pull_request.number }} preview" || echo "Nothing to commit"
-            git push
-          fi
+          vercel alias rm pr-${{ github.event.pull_request.number }}.codjiflo.vza.net --yes --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ secrets.VERCEL_ORG_ID }} || echo "Alias not found"
+
+      - name: Delete PR deployments
+        run: |
+          # List and delete deployments with this PR number in metadata
+          deployments=$(curl -s -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+            "https://api.vercel.com/v6/deployments?projectId=${{ secrets.VERCEL_PROJECT_ID }}&teamId=${{ secrets.VERCEL_ORG_ID }}&meta-gitPrNumber=${{ github.event.pull_request.number }}" \
+            | jq -r '.deployments[].uid // empty')
+          for uid in $deployments; do
+            echo "Deleting deployment $uid"
+            curl -s -X DELETE -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+              "https://api.vercel.com/v13/deployments/$uid?teamId=${{ secrets.VERCEL_ORG_ID }}" || echo "Failed to delete $uid"
+          done
