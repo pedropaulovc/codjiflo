@@ -18,9 +18,10 @@ vi.mock('../stores/useAuthStore', () => ({
 }));
 
 // Helper to mock useAuthStore with a partial state
-function mockAuthStore(partialState: { isAuthenticated: boolean }) {
+function mockAuthStore(partialState: { isAuthenticated: boolean; hasHydrated?: boolean }) {
+  const state = { hasHydrated: true, ...partialState };
   (useAuthStore as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-    <T,>(selector: (state: { isAuthenticated: boolean }) => T) => selector(partialState)
+    <T,>(selector: (state: { isAuthenticated: boolean; hasHydrated: boolean }) => T) => selector(state)
   );
 }
 
@@ -61,6 +62,22 @@ describe('useRequireAuth', () => {
 
     expect(result.current.isAuthenticated).toBe(false);
   });
+
+  it('should return isLoading true when not hydrated', () => {
+    mockAuthStore({ isAuthenticated: false, hasHydrated: false });
+
+    const { result } = renderHook(() => useRequireAuth());
+
+    expect(result.current.isLoading).toBe(true);
+  });
+
+  it('should not redirect when not hydrated', () => {
+    mockAuthStore({ isAuthenticated: false, hasHydrated: false });
+
+    renderHook(() => useRequireAuth());
+
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
 });
 
 describe('useRedirectIfAuthenticated', () => {
@@ -90,5 +107,21 @@ describe('useRedirectIfAuthenticated', () => {
     const { result } = renderHook(() => useRedirectIfAuthenticated());
 
     expect(result.current.isAuthenticated).toBe(false);
+  });
+
+  it('should return isLoading true when not hydrated', () => {
+    mockAuthStore({ isAuthenticated: true, hasHydrated: false });
+
+    const { result } = renderHook(() => useRedirectIfAuthenticated());
+
+    expect(result.current.isLoading).toBe(true);
+  });
+
+  it('should not redirect when not hydrated', () => {
+    mockAuthStore({ isAuthenticated: true, hasHydrated: false });
+
+    renderHook(() => useRedirectIfAuthenticated());
+
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 });

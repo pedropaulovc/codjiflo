@@ -20,7 +20,7 @@ interface PRPageProps {
 export default function PullRequestPage({ params }: PRPageProps) {
   const { owner, repo, number } = use(params);
   const router = useRouter();
-  const { isAuthenticated } = useRequireAuth();
+  const { isAuthenticated, isLoading } = useRequireAuth();
 
   const { loadPR, reset: resetPR } = usePRStore();
   const { loadFiles, reset: resetDiff } = useDiffStore();
@@ -68,6 +68,14 @@ export default function PullRequestPage({ params }: PRPageProps) {
   const handleBackToDashboard = useCallback(() => {
     router.push('/dashboard');
   }, [router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-gray-600">Loading...</div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return null;

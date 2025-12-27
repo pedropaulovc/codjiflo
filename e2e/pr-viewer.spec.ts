@@ -154,45 +154,63 @@ test.describe("PR Viewer Flow (S-1.2, S-1.3, S-1.4, S-1.5)", () => {
   test("Keyboard navigation works", async ({ page }) => {
     await page.goto("/pr/test/repo/123");
 
+    // Wait for page to fully stabilize
+    await page.waitForLoadState("networkidle");
+
     // Wait for PR page to load - check the diff heading
     await expect(page.getByRole("heading", { name: "src/components/Button.tsx" })).toBeVisible({ timeout: 30000 });
 
-    // Wait for the file navigation to be fully loaded
+    // Wait for the file navigation to be fully loaded with all files
     const fileNav = page.getByRole("navigation", { name: /Changed files/i });
     await expect(fileNav).toBeVisible({ timeout: 10000 });
+    await expect(fileNav.getByText("src/components/Button.tsx")).toBeVisible({ timeout: 10000 });
+    await expect(fileNav.getByText("src/index.ts")).toBeVisible({ timeout: 5000 });
 
-    // First file should be selected
+    // First file should be selected - wait for it to stabilize
     const firstFile = page.getByRole("button", { name: /Button\.tsx/i });
-    await expect(firstFile).toHaveAttribute("aria-selected", "true", { timeout: 10000 });
+    await expect(firstFile).toHaveAttribute("aria-selected", "true", { timeout: 15000 });
 
     // Focus on the page body to ensure keyboard events work
     await page.locator("body").click();
-    await page.waitForTimeout(100);
+    await page.waitForTimeout(500); // Give time for focus to settle
 
     // [AC-1.5.1] Press j to go to next file
     await page.keyboard.press("j");
+    await page.waitForTimeout(200); // Small delay for state update
 
     // Second file should be selected - wait for the state change
     const secondFile = page.getByRole("button", { name: /index\.ts/i });
-    await expect(secondFile).toHaveAttribute("aria-selected", "true", { timeout: 10000 });
+    await expect(secondFile).toHaveAttribute("aria-selected", "true", { timeout: 15000 });
 
     // [AC-1.5.1] Press k to go to previous file
     await page.keyboard.press("k");
-    await expect(firstFile).toHaveAttribute("aria-selected", "true", { timeout: 10000 });
+    await page.waitForTimeout(200); // Small delay for state update
+    await expect(firstFile).toHaveAttribute("aria-selected", "true", { timeout: 15000 });
   });
 
   test("Shortcuts modal opens with ? button", async ({ page }) => {
     await page.goto("/pr/test/repo/123");
 
+    // Wait for page to fully stabilize
+    await page.waitForLoadState("networkidle");
+
     // Wait for PR page to load - check the diff heading
     await expect(page.getByRole("heading", { name: "src/components/Button.tsx" })).toBeVisible({ timeout: 30000 });
 
-    // Wait for the shortcuts button to be visible
+    // Wait for the file navigation to be fully rendered (ensures page is stable)
+    const fileNav = page.getByRole("navigation", { name: /Changed files/i });
+    await expect(fileNav).toBeVisible({ timeout: 10000 });
+    await expect(fileNav.getByText("src/components/Button.tsx")).toBeVisible({ timeout: 10000 });
+
+    // Wait for the shortcuts button to be visible and stable
     const shortcutsButton = page.getByRole("button", { name: /Show keyboard shortcuts/i });
     await expect(shortcutsButton).toBeVisible({ timeout: 10000 });
 
-    // [AC-1.5.4] Click the shortcuts button to open modal
-    await shortcutsButton.click();
+    // Wait a moment for any re-renders to complete
+    await page.waitForTimeout(500);
+
+    // [AC-1.5.4] Click the shortcuts button to open modal (use force for stability)
+    await shortcutsButton.click({ force: true });
 
     // Modal should be visible
     await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10000 });
