@@ -128,7 +128,7 @@ jobs:
         timeout-minutes: 1
         run: npm run test:storybook
 
-  manual-tests:
+  build-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -140,33 +140,9 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run build -- --base=/codjiflo/pr-${{ github.event.pull_request.number }}/ --minify false --sourcemap
-
-      - uses: peaceiris/actions-gh-pages@v4
-        with:
-          personal_token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
-          external_repository: pedropaulovc/pedropaulovc.github.io
-          publish_dir: ./dist
-          destination_dir: codjiflo/pr-${{ github.event.pull_request.number }}
-
-      - name: Find Comment
-        uses: peter-evans/find-comment@v3
-        id: fc
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: 'Preview Deployment'
-
-      - name: Comment on PR
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            ## Preview Deployment
-
-            :rocket: **Preview:** https://gh.vza.net/codjiflo/pr-${{ github.event.pull_request.number }}/
-
-            _Updated for commit ${{ github.event.pull_request.head.sha }}_
-          edit-mode: replace
+      - name: Build Next.js app
+        run: npm run build
+        env:
+          # Skip telemetry during build
+          NEXT_TELEMETRY_DISABLED: 1
 
