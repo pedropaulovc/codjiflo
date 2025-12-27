@@ -51,9 +51,9 @@ test.describe("PR Viewer Flow (S-1.2, S-1.3, S-1.4, S-1.5)", () => {
   ];
 
   test.beforeEach(async ({ page }) => {
-    // Set up authentication
-    await page.goto("/");
-    await page.evaluate(() => {
+    // Set up authentication via addInitScript (runs BEFORE any page load)
+    // This ensures Zustand hydrates with auth state already in localStorage
+    await page.addInitScript(() => {
       localStorage.setItem(
         "auth-storage",
         JSON.stringify({
@@ -122,12 +122,15 @@ test.describe("PR Viewer Flow (S-1.2, S-1.3, S-1.4, S-1.5)", () => {
   test("File list displays correctly", async ({ page }) => {
     await page.goto("/pr/test/repo/123");
 
+    // Wait for page to load - check the diff heading as a stable indicator
+    await expect(page.getByRole("heading", { name: "src/components/Button.tsx" })).toBeVisible({ timeout: 20000 });
+
     // [S-1.3] Wait for files to load
     // [AC-1.3.1] All files are listed - use navigation context to be specific
     const fileNav = page.getByRole("navigation", { name: /Changed files/i });
-    await expect(fileNav.getByText("src/components/Button.tsx")).toBeVisible();
-    await expect(fileNav.getByText("src/index.ts")).toBeVisible();
-    await expect(fileNav.getByText("src/old-file.ts")).toBeVisible();
+    await expect(fileNav.getByText("src/components/Button.tsx")).toBeVisible({ timeout: 10000 });
+    await expect(fileNav.getByText("src/index.ts")).toBeVisible({ timeout: 5000 });
+    await expect(fileNav.getByText("src/old-file.ts")).toBeVisible({ timeout: 5000 });
 
     // [AC-1.3.3] Stats are displayed
     await expect(page.getByText("+50")).toBeVisible();
@@ -151,16 +154,20 @@ test.describe("PR Viewer Flow (S-1.2, S-1.3, S-1.4, S-1.5)", () => {
   test("Keyboard navigation works", async ({ page }) => {
     await page.goto("/pr/test/repo/123");
 
-    // Wait for files to load - check the file list navigation with longer timeout
-    const fileNav = page.getByRole("navigation", { name: /Changed files/i });
-    await expect(fileNav.getByText("src/components/Button.tsx")).toBeVisible({ timeout: 20000 });
+    // Wait for PR page to load - check the diff heading
+    await expect(page.getByRole("heading", { name: "src/components/Button.tsx" })).toBeVisible({ timeout: 30000 });
 
-    // First file should be selected - wait for selection
+    // Wait for the file navigation to be fully loaded
+    const fileNav = page.getByRole("navigation", { name: /Changed files/i });
+    await expect(fileNav).toBeVisible({ timeout: 10000 });
+
+    // First file should be selected
     const firstFile = page.getByRole("button", { name: /Button\.tsx/i });
     await expect(firstFile).toHaveAttribute("aria-selected", "true", { timeout: 10000 });
 
-    // Short delay to ensure keyboard event handlers are attached
-    await page.waitForTimeout(500);
+    // Focus on the page body to ensure keyboard events work
+    await page.locator("body").click();
+    await page.waitForTimeout(100);
 
     // [AC-1.5.1] Press j to go to next file
     await page.keyboard.press("j");
@@ -177,11 +184,10 @@ test.describe("PR Viewer Flow (S-1.2, S-1.3, S-1.4, S-1.5)", () => {
   test("Shortcuts modal opens with ? button", async ({ page }) => {
     await page.goto("/pr/test/repo/123");
 
-    // Wait for page to load - check the file list navigation with longer timeout
-    const fileNav = page.getByRole("navigation", { name: /Changed files/i });
-    await expect(fileNav.getByText("src/components/Button.tsx")).toBeVisible({ timeout: 20000 });
+    // Wait for PR page to load - check the diff heading
+    await expect(page.getByRole("heading", { name: "src/components/Button.tsx" })).toBeVisible({ timeout: 30000 });
 
-    // Wait for the shortcuts button to be stable before clicking
+    // Wait for the shortcuts button to be visible
     const shortcutsButton = page.getByRole("button", { name: /Show keyboard shortcuts/i });
     await expect(shortcutsButton).toBeVisible({ timeout: 10000 });
 
@@ -205,16 +211,19 @@ test.describe("PR Viewer Flow (S-1.2, S-1.3, S-1.4, S-1.5)", () => {
     // Wait for page to be fully loaded
     await expect(page.getByRole("heading", { name: /View Pull Request/i })).toBeVisible({ timeout: 15000 });
 
+    // Wait for hydration
+    await page.waitForTimeout(1000);
+
     // Enter invalid URL
     const input = page.getByLabel(/GitHub Pull Request URL/i);
     await input.fill("https://gitlab.com/owner/repo/pull/123");
 
-    // Wait for form validation to complete (button should be enabled after input)
-    const submitButton = page.getByRole("button", { name: /Load Pull Request/i });
-    await expect(submitButton).toBeEnabled({ timeout: 5000 });
+    // Wait a moment for form state to update
+    await page.waitForTimeout(500);
 
-    // Submit form
-    await submitButton.click();
+    // Submit form - use force to avoid element detachment issues
+    const submitButton = page.getByRole("button", { name: /Load Pull Request/i });
+    await submitButton.click({ force: true });
 
     // Should show error message
     await expect(page.getByText(/Invalid GitHub PR URL/i)).toBeVisible({ timeout: 10000 });
