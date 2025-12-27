@@ -24,16 +24,18 @@ import { useAuthStore } from '../stores/useAuthStore';
 export function useRequireAuth() {
   const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    // Only redirect after hydration is complete
+    if (hasHydrated && !isAuthenticated) {
       router.replace('/login');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, hasHydrated, router]);
 
   return {
     isAuthenticated,
-    isLoading: false, // Could be extended to handle hydration state
+    isLoading: !hasHydrated,
   };
 }
 
@@ -42,14 +44,14 @@ export function useRequireAuth() {
  * Redirects to dashboard if already authenticated.
  * Use this for login/signup pages.
  *
- * @returns Object with isAuthenticated status
+ * @returns Object with isAuthenticated status and isLoading state
  *
  * @example
  * ```tsx
  * function LoginPage() {
- *   const { isAuthenticated } = useRedirectIfAuthenticated();
+ *   const { isAuthenticated, isLoading } = useRedirectIfAuthenticated();
  *
- *   if (isAuthenticated) {
+ *   if (isLoading || isAuthenticated) {
  *     return null; // Redirecting...
  *   }
  *
@@ -60,12 +62,14 @@ export function useRequireAuth() {
 export function useRedirectIfAuthenticated() {
   const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    // Only redirect after hydration is complete
+    if (hasHydrated && isAuthenticated) {
       router.replace('/dashboard');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, hasHydrated, router]);
 
-  return { isAuthenticated };
+  return { isAuthenticated, isLoading: !hasHydrated };
 }

@@ -20,6 +20,7 @@ interface AuthState {
     isAuthenticated: boolean;
     error: string | null;
     isValidating: boolean;
+    hasHydrated: boolean;
     setToken: (token: string) => void;
     logout: () => void;
     validateToken: (token: string) => Promise<boolean>;
@@ -27,6 +28,7 @@ interface AuthState {
     handleOAuthCallback: (code: string, codeVerifier: string) => Promise<boolean>;
     refreshAccessToken: () => Promise<boolean>;
     isTokenExpiringSoon: () => boolean;
+    setHasHydrated: (hasHydrated: boolean) => void;
 }
 
 /**
@@ -64,6 +66,9 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: false,
             error: null,
             isValidating: false,
+            hasHydrated: false,
+
+            setHasHydrated: (hasHydrated: boolean) => set({ hasHydrated }),
 
             setToken: (token: string) => set({
                 token,
@@ -233,6 +238,9 @@ export const useAuthStore = create<AuthState>()(
                 authMethod: state.authMethod,
                 isAuthenticated: state.isAuthenticated,
             }),
+            onRehydrateStorage: () => (state) => {
+                state?.setHasHydrated(true);
+            },
         }
     )
 );

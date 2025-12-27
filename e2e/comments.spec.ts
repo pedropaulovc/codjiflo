@@ -92,19 +92,27 @@ test.describe("Inline comments flow (S-2.x)", () => {
   test("shows existing threads and allows adding a comment", async ({ page }) => {
     await page.goto("/pr/test/repo/123");
 
+    // Wait for page to fully stabilize
+    await page.waitForLoadState("networkidle");
+
     // Wait for page to load - check the diff heading as a stable indicator
-    await expect(page.getByRole("heading", { name: "src/example.ts" })).toBeVisible({ timeout: 20000 });
+    await expect(page.getByRole("heading", { name: "src/example.ts" })).toBeVisible({ timeout: 30000 });
+
+    // Wait for the file navigation to be fully loaded
+    const fileNav = page.getByRole("navigation", { name: /Changed files/i });
+    await expect(fileNav).toBeVisible({ timeout: 10000 });
+    await expect(fileNav.getByText("src/example.ts")).toBeVisible({ timeout: 10000 });
 
     // Wait for the file list item to be visible and selected
     const fileListItem = page.getByRole("button", { name: /src\/example\.ts/ });
     await expect(fileListItem).toBeVisible({ timeout: 10000 });
-    await expect(fileListItem).toHaveAttribute("aria-selected", "true", { timeout: 5000 });
+    await expect(fileListItem).toHaveAttribute("aria-selected", "true", { timeout: 15000 });
 
     // The diff content should be rendered in a table
     const diffTable = page.locator('table');
-    await expect(diffTable).toBeVisible({ timeout: 10000 });
+    await expect(diffTable).toBeVisible({ timeout: 15000 });
 
     // Verify the existing comment is displayed (comments load async)
-    await expect(page.getByText("Please add a quick note about this flag.")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText("Please add a quick note about this flag.")).toBeVisible({ timeout: 20000 });
   });
 });
