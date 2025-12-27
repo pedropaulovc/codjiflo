@@ -1,8 +1,22 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { oauthConfig } from '../config';
+
+type AuthMethod = 'oauth' | 'pat' | null;
+
+interface TokenResponse {
+    access_token: string;
+    refresh_token?: string;
+    expires_in?: number;
+    error?: string;
+    error_description?: string;
+}
 
 interface AuthState {
     token: string | null;
+    refreshToken: string | null;
+    tokenExpiresAt: number | null;
+    authMethod: AuthMethod;
     isAuthenticated: boolean;
     error: string | null;
     isValidating: boolean;
@@ -10,6 +24,9 @@ interface AuthState {
     logout: () => void;
     validateToken: (token: string) => Promise<boolean>;
     clearError: () => void;
+    handleOAuthCallback: (code: string, codeVerifier: string) => Promise<boolean>;
+    refreshAccessToken: () => Promise<boolean>;
+    isTokenExpiringSoon: () => boolean;
 }
 
 /**
@@ -39,39 +56,183 @@ async function validateGitHubToken(token: string): Promise<boolean> {
 
 export const useAuthStore = create<AuthState>()(
     persist(
-        (set) => ({
+        (set, get) => ({
             token: null,
+            refreshToken: null,
+            tokenExpiresAt: null,
+            authMethod: null,
             isAuthenticated: false,
             error: null,
             isValidating: false,
-            setToken: (token: string) => set({ token, isAuthenticated: true, error: null }),
-            logout: () => set({ token: null, isAuthenticated: false, error: null }),
+
+            setToken: (token: string) => set({
+                token,
+                isAuthenticated: true,
+                error: null,
+                authMethod: 'pat',
+            }),
+
+            logout: () => set({
+                token: null,
+                refreshToken: null,
+                tokenExpiresAt: null,
+                authMethod: null,
+                isAuthenticated: false,
+                error: null,
+            }),
+
             clearError: () => set({ error: null }),
+
             validateToken: async (token: string): Promise<boolean> => {
-                // Clear previous errors
                 set({ error: null, isValidating: true });
 
-                // Check format first
                 if (!isValidTokenFormat(token)) {
-                    set({ error: 'Invalid token format. Token must start with "ghp_" or "github_pat_"', isValidating: false });
+                    set({
+                        error: 'Invalid token format. Token must start with "ghp_" or "github_pat_"',
+                        isValidating: false,
+                    });
                     return false;
                 }
 
-                // Validate against GitHub API
                 const isValid = await validateGitHubToken(token);
-                
+
                 if (isValid) {
-                    set({ token, isAuthenticated: true, error: null, isValidating: false });
+                    set({
+                        token,
+                        isAuthenticated: true,
+                        error: null,
+                        isValidating: false,
+                        authMethod: 'pat',
+                    });
                     return true;
                 } else {
-                    set({ error: 'Authentication failed. Please check your token.', isValidating: false });
+                    set({
+                        error: 'Authentication failed. Please check your token.',
+                        isValidating: false,
+                    });
                     return false;
                 }
+            },
+
+            handleOAuthCallback: async (code: string, codeVerifier: string): Promise<boolean> => {
+                set({ error: null, isValidating: true });
+
+                try {
+                    const response = await fetch('/api/auth/token', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            code,
+                            code_verifier: codeVerifier,
+                        }),
+                    });
+
+                    const data = await response.json() as TokenResponse;
+
+                    if (data.error) {
+                        set({
+                            error: data.error_description ?? data.error,
+                            isValidating: false,
+                        });
+                        return false;
+                    }
+
+                    if (!data.access_token) {
+                        set({
+                            error: 'No access token received',
+                            isValidating: false,
+                        });
+                        return false;
+                    }
+
+                    const expiresIn = data.expires_in ?? oauthConfig.defaultTokenExpirySeconds;
+                    const tokenExpiresAt = Date.now() + expiresIn * 1000;
+
+                    set({
+                        token: data.access_token,
+                        refreshToken: data.refresh_token ?? null,
+                        tokenExpiresAt,
+                        authMethod: 'oauth',
+                        isAuthenticated: true,
+                        error: null,
+                        isValidating: false,
+                    });
+
+                    return true;
+                } catch (err) {
+                    console.error('OAuth callback error:', err);
+                    set({
+                        error: 'Failed to complete authentication',
+                        isValidating: false,
+                    });
+                    return false;
+                }
+            },
+
+            refreshAccessToken: async (): Promise<boolean> => {
+                const { refreshToken, authMethod } = get();
+
+                if (authMethod !== 'oauth' || !refreshToken) {
+                    return false;
+                }
+
+                try {
+                    const response = await fetch('/api/auth/refresh', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            refresh_token: refreshToken,
+                        }),
+                    });
+
+                    const data = await response.json() as TokenResponse;
+
+                    if (data.error || !data.access_token) {
+                        // Refresh failed, user needs to re-authenticate
+                        get().logout();
+                        return false;
+                    }
+
+                    const expiresIn = data.expires_in ?? oauthConfig.defaultTokenExpirySeconds;
+                    const tokenExpiresAt = Date.now() + expiresIn * 1000;
+
+                    set({
+                        token: data.access_token,
+                        refreshToken: data.refresh_token ?? refreshToken,
+                        tokenExpiresAt,
+                    });
+
+                    return true;
+                } catch (err) {
+                    console.error('Token refresh error:', err);
+                    get().logout();
+                    return false;
+                }
+            },
+
+            isTokenExpiringSoon: (): boolean => {
+                const { tokenExpiresAt, authMethod } = get();
+
+                if (authMethod !== 'oauth' || !tokenExpiresAt) {
+                    return false;
+                }
+
+                return Date.now() >= tokenExpiresAt - oauthConfig.refreshThresholdMs;
             },
         }),
         {
             name: 'auth-storage',
-            partialize: (state) => ({ token: state.token, isAuthenticated: state.isAuthenticated }),
+            partialize: (state) => ({
+                token: state.token,
+                refreshToken: state.refreshToken,
+                tokenExpiresAt: state.tokenExpiresAt,
+                authMethod: state.authMethod,
+                isAuthenticated: state.isAuthenticated,
+            }),
         }
     )
 );

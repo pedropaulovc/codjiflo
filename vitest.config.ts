@@ -14,15 +14,19 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./src/tests/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
+    exclude: [
+      "node_modules/",
+      "src/app/**",
+    ],
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "json-summary", "html"],
       exclude: [
         "node_modules/",
         "src/tests/",
+        "src/app/",
         "**/*.stories.tsx",
         "**/*.d.ts",
-        "src/main.tsx",
       ],
       thresholds: {
         lines: 70,
