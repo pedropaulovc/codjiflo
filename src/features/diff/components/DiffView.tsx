@@ -1,9 +1,13 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { useDiffStore } from '../stores';
 import { parsePatch, detectLanguage, getDiffLinePosition } from '../utils';
 import { DiffLine } from './DiffLine';
 import { Skeleton } from '@/components/ui';
 import { CommentEditor, CommentThread, useCommentsStore } from '@/features/comments';
+import type { ReviewThread } from '@/features/comments';
+
+/** Duration in milliseconds for screen reader announcements */
+const ANNOUNCEMENT_TIMEOUT_MS = 4000;
 
 /**
  * Unified diff view for the selected file
@@ -42,12 +46,17 @@ export function DiffView() {
   const threadsForFile = useMemo(() => {
     if (!filename) return [];
     return threads
-      .filter((thread) => thread.path === filename)
-      .sort(
-        (a, b) =>
-          (a.comments[0]?.createdAt.getTime() ?? 0) -
-          (b.comments[0]?.createdAt.getTime() ?? 0)
-      );
+      .filter(
+        (thread) =>
+          thread.path === filename &&
+          thread.comments.length > 0 &&
+          thread.comments[0]?.createdAt != null
+      )
+      .sort((a, b) => {
+        const aTime = a.comments[0]?.createdAt.getTime() ?? 0;
+        const bTime = b.comments[0]?.createdAt.getTime() ?? 0;
+        return aTime - bTime;
+      });
   }, [threads, filename]);
 
   const threadsByKey = useMemo(() => {
@@ -64,7 +73,7 @@ export function DiffView() {
     if (!announcement) return;
     const timer = window.setTimeout(() => {
       clearAnnouncement();
-    }, 4000);
+    }, ANNOUNCEMENT_TIMEOUT_MS);
     return () => window.clearTimeout(timer);
   }, [announcement, clearAnnouncement]);
 
@@ -143,11 +152,13 @@ export function DiffView() {
   );
 }
 
+type ThreadArray = ReviewThread[];
+
 interface DiffTableProps {
   diffLines: ReturnType<typeof parsePatch>;
   language: string;
   filename: string | undefined;
-  threadsByKey: Map<string, ReturnType<typeof useCommentsStore.getState>['threads']>;
+  threadsByKey: Map<string, ThreadArray>;
   currentUserLogin: string;
   addComment: ReturnType<typeof useCommentsStore.getState>['addComment'];
   addReply: ReturnType<typeof useCommentsStore.getState>['addReply'];
@@ -171,21 +182,65 @@ function DiffTable({
   const [draftLineIndex, setDraftLineIndex] = useState<number | null>(null);
   const [draftBody, setDraftBody] = useState('');
   const [isSubmittingDraft, setIsSubmittingDraft] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const handleSubmitComment = useCallback(
+    async (index: number, body: string) => {
+      if (isSubmittingDraft) return; // Prevent double submission
+
+      const targetLine = diffLines[index];
+      const side = targetLine?.type === 'deletion' ? 'LEFT' : 'RIGHT';
+      const lineNumber =
+        side === 'LEFT' ? targetLine?.oldLineNumber : targetLine?.newLineNumber;
+      const position = getDiffLinePosition(diffLines, index);
+
+      if (!targetLine || !lineNumber || !filename) {
+        return;
+      }
+
+      setIsSubmittingDraft(true);
+      setSubmitError(null);
+
+      try {
+        await addComment({
+          path: filename,
+          line: lineNumber,
+          side,
+          body: body.trim(),
+          position,
+        });
+        setDraftLineIndex(null);
+        setDraftBody('');
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to post comment';
+        setSubmitError(message);
+      } finally {
+        setIsSubmittingDraft(false);
+      }
+    },
+    [addComment, diffLines, filename, isSubmittingDraft]
+  );
 
   return (
     <table className="w-full border-collapse text-sm">
       <tbody>
         {diffLines.map((line, index) => {
-          const leftKey = line.oldLineNumber ? `${String(line.oldLineNumber)}-LEFT` : null;
-          const rightKey = line.newLineNumber ? `${String(line.newLineNumber)}-RIGHT` : null;
+          const leftKey = line.oldLineNumber != null ? `${String(line.oldLineNumber)}-LEFT` : null;
+          const rightKey = line.newLineNumber != null ? `${String(line.newLineNumber)}-RIGHT` : null;
           const lineThreads = [
             ...(leftKey ? threadsByKey.get(leftKey) ?? [] : []),
             ...(rightKey ? threadsByKey.get(rightKey) ?? [] : []),
           ];
           const showCommentButton = line.type !== 'header';
 
+          // Use line numbers for stable keys when available, fall back to index
+          const lineKey =
+            line.oldLineNumber != null || line.newLineNumber != null
+              ? `${String(line.oldLineNumber ?? 'n')}-${String(line.newLineNumber ?? 'n')}-${line.type}`
+              : `${String(index)}-${line.type}`;
+
           return (
-            <Fragment key={`${String(index)}-${line.type}`}>
+            <Fragment key={lineKey}>
               <DiffLine
                 line={line}
                 language={language}
@@ -193,44 +248,25 @@ function DiffTable({
                 onStartComment={() => {
                   setDraftLineIndex(index);
                   setDraftBody('');
+                  setSubmitError(null);
                 }}
               />
               {draftLineIndex === index && (
                 <tr>
                   <td colSpan={4} className="bg-gray-50 px-8 py-4">
+                    {submitError && (
+                      <div className="mb-2 text-sm text-red-600">{submitError}</div>
+                    )}
                     <CommentEditor
                       value={draftBody}
                       onChange={setDraftBody}
                       onSubmit={() => {
-                        void (async () => {
-                          const targetLine = diffLines[index];
-                          const side = targetLine?.type === 'deletion' ? 'LEFT' : 'RIGHT';
-                          const lineNumber =
-                            side === 'LEFT'
-                              ? targetLine?.oldLineNumber
-                              : targetLine?.newLineNumber;
-                          const position = getDiffLinePosition(diffLines, index);
-
-                          if (!targetLine || !lineNumber || !filename) {
-                            return;
-                          }
-
-                          setIsSubmittingDraft(true);
-                          await addComment({
-                            path: filename,
-                            line: lineNumber,
-                            side,
-                            body: draftBody.trim(),
-                            position,
-                          });
-                          setIsSubmittingDraft(false);
-                          setDraftLineIndex(null);
-                          setDraftBody('');
-                        })();
+                        void handleSubmitComment(index, draftBody);
                       }}
                       onCancel={() => {
                         setDraftLineIndex(null);
                         setDraftBody('');
+                        setSubmitError(null);
                       }}
                       isSubmitting={isSubmittingDraft}
                       label="Add comment"

@@ -34,15 +34,20 @@ export class GitHubClient {
       throw new GitHubAPIError(401, 'Unauthorized', 'Not authenticated');
     }
 
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
+    const requestInit: RequestInit = {
       method: options?.method ?? 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/vnd.github.v3+json',
         ...(options?.body ? { 'Content-Type': 'application/json' } : {}),
       },
-      body: options?.body ? JSON.stringify(options.body) : null,
-    });
+    };
+
+    if (options?.body) {
+      requestInit.body = JSON.stringify(options.body);
+    }
+
+    const response = await fetch(`${this.baseURL}${endpoint}`, requestInit);
 
     if (!response.ok) {
       let errorMessage = response.statusText;
