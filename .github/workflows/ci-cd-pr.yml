@@ -143,18 +143,15 @@ jobs:
 
       - run: npm ci
 
-      - name: Install Vercel CLI
-        run: npm install -g vercel
-
       - name: Deploy to Vercel
         id: deploy
         run: |
-          url=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --meta gitCommitSha=${{ github.sha }} --meta gitPrNumber=${{ github.event.pull_request.number }})
+          url=$(npx vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --meta gitCommitSha=${{ github.sha }} --meta gitPrNumber=${{ github.event.pull_request.number }})
           echo "url=$url" >> $GITHUB_OUTPUT
 
       - name: Set deployment alias
         run: |
-          vercel alias set ${{ steps.deploy.outputs.url }} pr-${{ github.event.pull_request.number }}.codjiflo.vza.net --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ secrets.VERCEL_ORG_ID }}
+          npx vercel alias set ${{ steps.deploy.outputs.url }} pr-${{ github.event.pull_request.number }}.codjiflo.vza.net --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ secrets.VERCEL_ORG_ID }}
 
       - name: Find Comment
         uses: peter-evans/find-comment@v3
