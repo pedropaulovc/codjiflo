@@ -9,11 +9,8 @@ export default function Home() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      router.replace('/dashboard');
-    } else {
-      router.replace('/login');
-    }
+    // Home page redirects based on auth status
+    router.replace(isAuthenticated ? '/dashboard' : '/login');
   }, [isAuthenticated, router]);
 
   return (

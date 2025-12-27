@@ -1,23 +1,19 @@
 'use client';
 
-import { useState, FormEvent, useEffect } from 'react';
+import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/Input';
 import { Button } from '@/components/Button';
 import { parseGitHubPRUrl } from '@/features/pr';
 import { useAuthStore } from '@/features/auth/stores/useAuthStore';
+import { useRequireAuth } from '@/features/auth/hooks';
 
 export default function DashboardPage() {
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
-  const { logout, isAuthenticated } = useAuthStore();
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace('/login');
-    }
-  }, [isAuthenticated, router]);
+  const logout = useAuthStore((s) => s.logout);
+  const { isAuthenticated } = useRequireAuth();
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -34,7 +30,7 @@ export default function DashboardPage() {
 
   const handleLogout = () => {
     logout();
-    router.push('/login');
+    router.replace('/login');
   };
 
   if (!isAuthenticated) {

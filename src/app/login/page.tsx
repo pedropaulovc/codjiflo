@@ -1,24 +1,19 @@
 'use client';
 
-import { useState, FormEvent, useEffect } from 'react';
+import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/features/auth/stores/useAuthStore';
-import { useOAuthFlow } from '@/features/auth/hooks/useOAuthFlow';
+import { useOAuthFlow, useRedirectIfAuthenticated } from '@/features/auth/hooks';
 import { Input } from '@/components/Input';
 import { Button } from '@/components/Button';
 
 export default function LoginPage() {
   const [tokenInput, setTokenInput] = useState('');
   const [showPATSection, setShowPATSection] = useState(false);
-  const { validateToken, error, isValidating, clearError, isAuthenticated } = useAuthStore();
+  const { validateToken, error, isValidating, clearError } = useAuthStore();
   const { initiateOAuth, isInitiating } = useOAuthFlow();
+  const { isAuthenticated } = useRedirectIfAuthenticated();
   const router = useRouter();
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.replace('/dashboard');
-    }
-  }, [isAuthenticated, router]);
 
   const handleOAuthLogin = () => {
     initiateOAuth();
@@ -29,7 +24,7 @@ export default function LoginPage() {
     void (async () => {
       const success = await validateToken(tokenInput);
       if (success) {
-        router.push('/dashboard');
+        router.replace('/dashboard');
       }
     })();
   };
@@ -40,6 +35,10 @@ export default function LoginPage() {
       clearError();
     }
   };
+
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">

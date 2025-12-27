@@ -7,7 +7,7 @@ import { useDiffStore, FileList, DiffView } from '@/features/diff';
 import { PRHeader } from '@/features/pr/components';
 import { useKeyboardShortcuts, ShortcutsModal } from '@/features/keyboard';
 import { useCommentsStore } from '@/features/comments';
-import { useAuthStore } from '@/features/auth/stores/useAuthStore';
+import { useRequireAuth } from '@/features/auth/hooks';
 
 interface PRPageProps {
   params: Promise<{
@@ -20,7 +20,7 @@ interface PRPageProps {
 export default function PullRequestPage({ params }: PRPageProps) {
   const { owner, repo, number } = use(params);
   const router = useRouter();
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { isAuthenticated } = useRequireAuth();
 
   const { loadPR, reset: resetPR } = usePRStore();
   const { loadFiles, reset: resetDiff } = useDiffStore();
@@ -28,12 +28,6 @@ export default function PullRequestPage({ params }: PRPageProps) {
   const [showShortcuts, setShowShortcuts] = useState(false);
 
   useKeyboardShortcuts();
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace('/login');
-    }
-  }, [isAuthenticated, router]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

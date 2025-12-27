@@ -13,7 +13,13 @@ export const oauthConfig = {
    * Set via NEXT_PUBLIC_APP_URL environment variable
    */
   get redirectUri(): string {
-    const appUrl = process.env['NEXT_PUBLIC_APP_URL'] ?? '';
+    const appUrl = process.env['NEXT_PUBLIC_APP_URL'];
+    if (!appUrl) {
+      throw new Error(
+        'Missing required environment variable NEXT_PUBLIC_APP_URL for OAuth redirect URI. ' +
+        'Set NEXT_PUBLIC_APP_URL to the public base URL of the application (e.g. "https://example.com").'
+      );
+    }
     return `${appUrl}/auth/callback`;
   },
 

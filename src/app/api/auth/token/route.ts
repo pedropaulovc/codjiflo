@@ -37,7 +37,10 @@ export async function POST(req: Request): Promise<Response> {
     const clientSecret = process.env['GITHUB_APP_CLIENT_SECRET'];
 
     if (!clientId || !clientSecret) {
-      console.error('Missing GitHub App credentials in environment');
+      const missing = [];
+      if (!clientId) missing.push('GITHUB_APP_CLIENT_ID');
+      if (!clientSecret) missing.push('GITHUB_APP_CLIENT_SECRET');
+      console.error(`Missing GitHub App credentials: ${missing.join(', ')}`);
       return NextResponse.json(
         { error: 'Server configuration error' },
         { status: 500 }
