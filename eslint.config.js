@@ -35,4 +35,10 @@ export default tseslint.config({ ignores: ["dist", "storybook-static", "coverage
   // Disable type-aware linting for config files
   files: ["*.config.ts", "*.config.js", "playwright.config.ts"],
   extends: [tseslint.configs.disableTypeChecked],
+}, {
+  // Next.js App Router files export metadata/generateMetadata alongside components
+  files: ["src/app/**/layout.tsx", "src/app/**/page.tsx"],
+  rules: {
+    "react-refresh/only-export-components": "off",
+  },
 }, storybook.configs["flat/recommended"]);

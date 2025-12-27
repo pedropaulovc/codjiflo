@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import type { Review } from '@/api/types';
 import { Badge } from '@/components/ui';
 
@@ -20,10 +21,12 @@ export function PRMetadata({ pr }: PRMetadataProps) {
       <div className="flex flex-wrap items-center gap-4">
         {/* Author avatar and name - AC-1.2.3 */}
         <div className="flex items-center gap-2">
-          <img
+          <Image
             src={pr.author.avatarUrl}
             alt={`${pr.author.displayName}'s avatar`}
-            className="w-8 h-8 rounded-full"
+            width={32}
+            height={32}
+            className="rounded-full"
           />
           <span className="font-medium text-gray-900">{pr.author.displayName}</span>
         </div>

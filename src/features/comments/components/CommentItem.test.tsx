@@ -42,7 +42,8 @@ describe("CommentItem", () => {
     render(<CommentItem {...defaultProps} />);
     const avatar = screen.getByAltText("testuser avatar");
     expect(avatar).toBeInTheDocument();
-    expect(avatar).toHaveAttribute("src", "https://example.com/avatar.png");
+    // Next.js Image component transforms the src URL for optimization
+    expect(avatar).toHaveAttribute("src", expect.stringContaining(encodeURIComponent("https://example.com/avatar.png")));
   });
 
   it("renders time ago", () => {
