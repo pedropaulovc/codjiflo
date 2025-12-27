@@ -23,15 +23,29 @@ interface GitHubTokenResponse {
  */
 export async function POST(req: Request): Promise<Response> {
   try {
-    const body = await req.json() as TokenRequest;
-    const { code, code_verifier } = body;
-
-    if (!code || !code_verifier) {
+    let rawBody: unknown;
+    try {
+      rawBody = await req.json();
+    } catch {
       return NextResponse.json(
-        { error: 'Missing required parameters: code and code_verifier' },
+        { error: 'Invalid JSON body' },
         { status: 400 }
       );
     }
+
+    if (
+      !rawBody ||
+      typeof rawBody !== 'object' ||
+      typeof (rawBody as Record<string, unknown>)['code'] !== 'string' ||
+      typeof (rawBody as Record<string, unknown>)['code_verifier'] !== 'string'
+    ) {
+      return NextResponse.json(
+        { error: 'Invalid or missing parameters: code and code_verifier must be strings' },
+        { status: 400 }
+      );
+    }
+
+    const { code, code_verifier } = rawBody as TokenRequest;
 
     const clientId = process.env['GITHUB_APP_CLIENT_ID'];
     const clientSecret = process.env['GITHUB_APP_CLIENT_SECRET'];
@@ -60,6 +74,25 @@ export async function POST(req: Request): Promise<Response> {
         code_verifier,
       }),
     });
+
+    if (!response.ok) {
+      let errorBody: string | undefined;
+      try {
+        errorBody = await response.text();
+      } catch {
+        // Ignore body parsing errors for logging purposes
+      }
+      console.error(
+        'GitHub token endpoint returned non-OK status:',
+        response.status,
+        response.statusText,
+        errorBody
+      );
+      return NextResponse.json(
+        { error: 'Failed to exchange token with GitHub' },
+        { status: 502 }
+      );
+    }
 
     const data = await response.json() as GitHubTokenResponse;
 

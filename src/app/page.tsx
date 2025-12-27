@@ -6,12 +6,16 @@ import { useAuthStore } from '@/features/auth/stores/useAuthStore';
 
 export default function Home() {
   const router = useRouter();
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { isAuthenticated, hasHydrated } = useAuthStore((state) => ({
+    isAuthenticated: state.isAuthenticated,
+    hasHydrated: state.hasHydrated,
+  }));
 
   useEffect(() => {
+    if (!hasHydrated) return;
     // Home page redirects based on auth status
     router.replace(isAuthenticated ? '/dashboard' : '/login');
-  }, [isAuthenticated, router]);
+  }, [hasHydrated, isAuthenticated, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">
