@@ -11,9 +11,14 @@ export const oauthConfig = {
   /**
    * OAuth callback URL
    * Set via NEXT_PUBLIC_APP_URL environment variable
+   * Defaults to localhost:3000 in development
    */
   get redirectUri(): string {
-    const appUrl = process.env['NEXT_PUBLIC_APP_URL'];
+    const envAppUrl = process.env['NEXT_PUBLIC_APP_URL'];
+    const appUrl =
+      envAppUrl ??
+      (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : undefined);
+
     if (!appUrl) {
       throw new Error(
         'Missing required environment variable NEXT_PUBLIC_APP_URL for OAuth redirect URI. ' +

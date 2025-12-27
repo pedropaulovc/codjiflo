@@ -60,6 +60,25 @@ export async function POST(req: Request): Promise<Response> {
       }),
     });
 
+    if (!response.ok) {
+      let errorBody: string | undefined;
+      try {
+        errorBody = await response.text();
+      } catch {
+        // Ignore body parsing errors for logging purposes
+      }
+      console.error(
+        'GitHub token refresh endpoint returned non-OK status:',
+        response.status,
+        response.statusText,
+        errorBody
+      );
+      return NextResponse.json(
+        { error: 'Failed to refresh token with GitHub' },
+        { status: 502 }
+      );
+    }
+
     const data = await response.json() as GitHubTokenResponse;
 
     if (data.error) {
