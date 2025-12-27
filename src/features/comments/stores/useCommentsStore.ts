@@ -36,7 +36,16 @@ const createLocalId = () => {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
     return crypto.randomUUID();
   }
-  return `${String(Date.now())}-${Math.random().toString(16).slice(2)}`;
+
+  // Fallback with improved entropy using multiple random values and high-precision time
+  const timePart = Date.now().toString(16);
+  const perfPart =
+    typeof performance !== 'undefined' && typeof performance.now === 'function'
+      ? Math.floor(performance.now() * 1000).toString(16)
+      : '';
+  const randomPart = `${Math.random().toString(16).slice(2)}${Math.random().toString(16).slice(2)}`;
+
+  return `${timePart}-${perfPart}-${randomPart}`;
 };
 
 const mapGitHubComment = (comment: GitHubReviewComment): Comment => ({
@@ -53,8 +62,8 @@ const mapGitHubComment = (comment: GitHubReviewComment): Comment => ({
   line: comment.line ?? 0,
   side: comment.side,
   position: comment.position,
-  ...(comment.in_reply_to_id
-    ? { inReplyTo: String(comment.in_reply_to_id) }
+  ...(comment.in_reply_to_id != null
+    ? { inReplyTo: comment.in_reply_to_id.toString() }
     : {}),
 });
 
@@ -119,11 +128,11 @@ export const useCommentsStore = create<CommentsState>((set, get) => ({
       );
       set({ threads: groupCommentsIntoThreads(data), isLoading: false });
     } catch (err) {
-      let message = 'Failed to load comments';
+      let message = `Unable to load comments for pull request #${String(number)} in ${owner}/${repo}`;
       if (err instanceof GitHubAPIError) {
-        message = err.message;
+        message = `${message}: ${err.message}`;
       } else if (err instanceof Error) {
-        message = err.message;
+        message = `${message}: ${err.message}`;
       }
       set({ error: message, isLoading: false });
     }

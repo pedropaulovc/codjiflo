@@ -90,7 +90,7 @@ export function DiffLine({ line, language, onStartComment, showCommentButton = f
       <td className="relative px-1 py-0.5 text-center select-none w-8 text-xs font-mono">
         <span aria-hidden="true">{LINE_MARKERS[line.type]}</span>
         {showCommentButton && onStartComment && (
-          <div className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100">
+          <div className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-within:opacity-100">
             <Button
               label="+"
               variant="secondary"

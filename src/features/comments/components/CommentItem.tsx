@@ -36,16 +36,32 @@ export function CommentItem({ comment, isCurrentUser, onEdit, onDelete }: Commen
         <div className="prose prose-sm max-w-none prose-p:my-2 prose-pre:bg-gray-50">
           <Markdown
             components={{
-              a: ({ children, ...props }) => (
-                <a
-                  {...props}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
-                >
-                  {children}
-                </a>
-              ),
+              a: ({ children, href, ...props }) => {
+                const isExternal = typeof href === 'string' && /^https?:\/\//.test(href);
+
+                return (
+                  <a
+                    {...props}
+                    href={href}
+                    target={isExternal ? '_blank' : undefined}
+                    rel={isExternal ? 'noopener noreferrer' : undefined}
+                    className="text-blue-600 hover:underline"
+                  >
+                    {children}
+                    {isExternal && (
+                      <>
+                        <span
+                          aria-hidden="true"
+                          className="ml-1 inline-block align-baseline"
+                        >
+                          ↗
+                        </span>
+                        <span className="sr-only">(opens in a new tab)</span>
+                      </>
+                    )}
+                  </a>
+                );
+              },
             }}
           >
             {comment.body}
