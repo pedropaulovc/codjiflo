@@ -146,16 +146,10 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel
 
-      - name: Pull Vercel environment
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build with Vercel
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
-
       - name: Deploy to Vercel
         id: deploy
         run: |
-          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} --meta gitCommitSha=${{ github.sha }} --meta gitPrNumber=${{ github.event.pull_request.number }})
+          url=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --meta gitCommitSha=${{ github.sha }} --meta gitPrNumber=${{ github.event.pull_request.number }})
           echo "url=$url" >> $GITHUB_OUTPUT
 
       - name: Set deployment alias
