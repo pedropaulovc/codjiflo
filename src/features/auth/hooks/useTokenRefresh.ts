@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { useAuthStore } from '../stores/useAuthStore';
-import { oauthConfig } from '../config';
 
 /**
  * Hook for automatic token refresh

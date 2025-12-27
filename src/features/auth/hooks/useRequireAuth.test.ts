@@ -23,9 +23,9 @@ describe('useRequireAuth', () => {
   });
 
   it('should redirect to login when not authenticated', () => {
-    vi.mocked(useAuthStore).mockImplementation((selector) => {
+    vi.mocked(useAuthStore).mockImplementation(<T,>(selector: (state: { isAuthenticated: boolean }) => T) => {
       const state = { isAuthenticated: false };
-      return selector ? selector(state) : state;
+      return selector(state);
     });
 
     renderHook(() => useRequireAuth());
@@ -34,9 +34,9 @@ describe('useRequireAuth', () => {
   });
 
   it('should not redirect when authenticated', () => {
-    vi.mocked(useAuthStore).mockImplementation((selector) => {
+    vi.mocked(useAuthStore).mockImplementation(<T,>(selector: (state: { isAuthenticated: boolean }) => T) => {
       const state = { isAuthenticated: true };
-      return selector ? selector(state) : state;
+      return selector(state);
     });
 
     renderHook(() => useRequireAuth());
@@ -45,9 +45,9 @@ describe('useRequireAuth', () => {
   });
 
   it('should return isAuthenticated status', () => {
-    vi.mocked(useAuthStore).mockImplementation((selector) => {
+    vi.mocked(useAuthStore).mockImplementation(<T,>(selector: (state: { isAuthenticated: boolean }) => T) => {
       const state = { isAuthenticated: true };
-      return selector ? selector(state) : state;
+      return selector(state);
     });
 
     const { result } = renderHook(() => useRequireAuth());
@@ -57,9 +57,9 @@ describe('useRequireAuth', () => {
   });
 
   it('should return false for isAuthenticated when not authenticated', () => {
-    vi.mocked(useAuthStore).mockImplementation((selector) => {
+    vi.mocked(useAuthStore).mockImplementation(<T,>(selector: (state: { isAuthenticated: boolean }) => T) => {
       const state = { isAuthenticated: false };
-      return selector ? selector(state) : state;
+      return selector(state);
     });
 
     const { result } = renderHook(() => useRequireAuth());
@@ -74,9 +74,9 @@ describe('useRedirectIfAuthenticated', () => {
   });
 
   it('should redirect to dashboard when authenticated', () => {
-    vi.mocked(useAuthStore).mockImplementation((selector) => {
+    vi.mocked(useAuthStore).mockImplementation(<T,>(selector: (state: { isAuthenticated: boolean }) => T) => {
       const state = { isAuthenticated: true };
-      return selector ? selector(state) : state;
+      return selector(state);
     });
 
     renderHook(() => useRedirectIfAuthenticated());
@@ -85,9 +85,9 @@ describe('useRedirectIfAuthenticated', () => {
   });
 
   it('should not redirect when not authenticated', () => {
-    vi.mocked(useAuthStore).mockImplementation((selector) => {
+    vi.mocked(useAuthStore).mockImplementation(<T,>(selector: (state: { isAuthenticated: boolean }) => T) => {
       const state = { isAuthenticated: false };
-      return selector ? selector(state) : state;
+      return selector(state);
     });
 
     renderHook(() => useRedirectIfAuthenticated());
@@ -96,9 +96,9 @@ describe('useRedirectIfAuthenticated', () => {
   });
 
   it('should return isAuthenticated status', () => {
-    vi.mocked(useAuthStore).mockImplementation((selector) => {
+    vi.mocked(useAuthStore).mockImplementation(<T,>(selector: (state: { isAuthenticated: boolean }) => T) => {
       const state = { isAuthenticated: false };
-      return selector ? selector(state) : state;
+      return selector(state);
     });
 
     const { result } = renderHook(() => useRedirectIfAuthenticated());
