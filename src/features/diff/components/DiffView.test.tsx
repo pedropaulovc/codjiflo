@@ -1,16 +1,40 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@/tests/helpers';
+import { render, screen, fireEvent, waitFor } from '@/tests/helpers';
 import { DiffView } from './DiffView';
 import { useDiffStore } from '../stores';
+import { useCommentsStore } from '@/features/comments';
 import { FileChangeStatus } from '@/api/types';
 
 vi.mock('../stores', () => ({
   useDiffStore: vi.fn(),
 }));
 
+vi.mock('@/features/comments', async () => {
+  const actual = await vi.importActual('@/features/comments');
+  return {
+    ...actual,
+    useCommentsStore: vi.fn(),
+  };
+});
+
+const mockDefaultCommentsState = {
+  threads: [],
+  isLoading: false,
+  error: null,
+  announcement: '',
+  currentUser: { id: 'user-1', login: 'testuser', avatarUrl: 'https://example.com/avatar.png' },
+  addComment: vi.fn().mockResolvedValue(undefined),
+  addReply: vi.fn().mockResolvedValue(undefined),
+  editComment: vi.fn().mockResolvedValue(undefined),
+  deleteComment: vi.fn().mockResolvedValue(undefined),
+  toggleResolved: vi.fn(),
+  clearAnnouncement: vi.fn(),
+};
+
 describe('DiffView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useCommentsStore).mockReturnValue(mockDefaultCommentsState);
   });
 
   it('shows loading state', () => {
@@ -79,5 +103,325 @@ describe('DiffView', () => {
 
     expect(screen.getByRole('heading', { name: 'src/index.ts' })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: /Diff content for src\/index.ts/i })).toBeInTheDocument();
+  });
+
+  it('displays comment loading state', () => {
+    vi.mocked(useDiffStore).mockReturnValue({
+      files: [
+        {
+          filename: 'src/index.ts',
+          status: FileChangeStatus.Modified,
+          additions: 1,
+          deletions: 0,
+          changes: 1,
+          patch: '@@ -1,3 +1,4 @@\n context\n+added line',
+        },
+      ],
+      selectedFileIndex: 0,
+      isLoading: false,
+    });
+
+    vi.mocked(useCommentsStore).mockReturnValue({
+      ...mockDefaultCommentsState,
+      isLoading: true,
+    });
+
+    render(<DiffView />);
+
+    expect(screen.getByText(/Loading comments/i)).toBeInTheDocument();
+  });
+
+  it('displays comment error', () => {
+    vi.mocked(useDiffStore).mockReturnValue({
+      files: [
+        {
+          filename: 'src/index.ts',
+          status: FileChangeStatus.Modified,
+          additions: 1,
+          deletions: 0,
+          changes: 1,
+          patch: '@@ -1,3 +1,4 @@\n context\n+added line',
+        },
+      ],
+      selectedFileIndex: 0,
+      isLoading: false,
+    });
+
+    vi.mocked(useCommentsStore).mockReturnValue({
+      ...mockDefaultCommentsState,
+      error: 'Failed to load comments',
+    });
+
+    render(<DiffView />);
+
+    expect(screen.getByText(/Failed to load comments/i)).toBeInTheDocument();
+  });
+
+  it('displays announcements in aria-live region', () => {
+    vi.mocked(useDiffStore).mockReturnValue({
+      files: [
+        {
+          filename: 'src/index.ts',
+          status: FileChangeStatus.Modified,
+          additions: 1,
+          deletions: 0,
+          changes: 1,
+          patch: '@@ -1,3 +1,4 @@\n context\n+added line',
+        },
+      ],
+      selectedFileIndex: 0,
+      isLoading: false,
+    });
+
+    vi.mocked(useCommentsStore).mockReturnValue({
+      ...mockDefaultCommentsState,
+      announcement: 'Comment posted.',
+    });
+
+    render(<DiffView />);
+
+    expect(screen.getByRole('status')).toHaveTextContent('Comment posted.');
+  });
+
+  it('opens comment editor when clicking add comment button', async () => {
+    vi.mocked(useDiffStore).mockReturnValue({
+      files: [
+        {
+          filename: 'src/index.ts',
+          status: FileChangeStatus.Modified,
+          additions: 1,
+          deletions: 0,
+          changes: 1,
+          patch: '@@ -1,3 +1,4 @@\n context\n+added line',
+        },
+      ],
+      selectedFileIndex: 0,
+      isLoading: false,
+    });
+
+    render(<DiffView />);
+
+    // Find and click the add comment button on a diff line
+    const addCommentButtons = screen.getAllByRole('button', { name: /add comment/i });
+    expect(addCommentButtons.length).toBeGreaterThan(0);
+
+    const firstButton = addCommentButtons[0];
+    if (firstButton) {
+      fireEvent.click(firstButton);
+    }
+
+    // CommentEditor should now be visible
+    await waitFor(() => {
+      expect(screen.getByRole('textbox')).toBeInTheDocument();
+    });
+  });
+
+  it('submits a comment successfully', async () => {
+    const mockAddComment = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(useDiffStore).mockReturnValue({
+      files: [
+        {
+          filename: 'src/index.ts',
+          status: FileChangeStatus.Modified,
+          additions: 1,
+          deletions: 0,
+          changes: 1,
+          patch: '@@ -1,3 +1,4 @@\n context\n+added line',
+        },
+      ],
+      selectedFileIndex: 0,
+      isLoading: false,
+    });
+
+    vi.mocked(useCommentsStore).mockReturnValue({
+      ...mockDefaultCommentsState,
+      addComment: mockAddComment,
+    });
+
+    render(<DiffView />);
+
+    // Click add comment button on a code line (index 1), not header
+    const addCommentButtons = screen.getAllByRole('button', { name: /add comment/i });
+    const codeLineButton = addCommentButtons[1];
+    if (codeLineButton) {
+      fireEvent.click(codeLineButton);
+    }
+
+    // Type a comment
+    const textarea = await screen.findByRole('textbox');
+    fireEvent.change(textarea, { target: { value: 'Test comment' } });
+
+    // Submit the comment (button is named "Comment")
+    const submitButton = screen.getByRole('button', { name: /^comment$/i });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockAddComment).toHaveBeenCalled();
+    });
+  });
+
+  it('cancels comment editing', async () => {
+    vi.mocked(useDiffStore).mockReturnValue({
+      files: [
+        {
+          filename: 'src/index.ts',
+          status: FileChangeStatus.Modified,
+          additions: 1,
+          deletions: 0,
+          changes: 1,
+          patch: '@@ -1,3 +1,4 @@\n context\n+added line',
+        },
+      ],
+      selectedFileIndex: 0,
+      isLoading: false,
+    });
+
+    render(<DiffView />);
+
+    // Click add comment button
+    const addCommentButtons = screen.getAllByRole('button', { name: /add comment/i });
+    const firstButton = addCommentButtons[0];
+    if (firstButton) {
+      fireEvent.click(firstButton);
+    }
+
+    // Wait for editor to appear
+    const textarea = await screen.findByRole('textbox');
+    expect(textarea).toBeInTheDocument();
+
+    // Cancel
+    const cancelButton = screen.getByRole('button', { name: /cancel/i });
+    fireEvent.click(cancelButton);
+
+    // Editor should be gone
+    await waitFor(() => {
+      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    });
+  });
+
+  it('handles comment submission error', async () => {
+    const mockAddComment = vi.fn().mockRejectedValue(new Error('Network error'));
+    vi.mocked(useDiffStore).mockReturnValue({
+      files: [
+        {
+          filename: 'src/index.ts',
+          status: FileChangeStatus.Modified,
+          additions: 1,
+          deletions: 0,
+          changes: 1,
+          patch: '@@ -1,3 +1,4 @@\n context\n+added line',
+        },
+      ],
+      selectedFileIndex: 0,
+      isLoading: false,
+    });
+
+    vi.mocked(useCommentsStore).mockReturnValue({
+      ...mockDefaultCommentsState,
+      addComment: mockAddComment,
+    });
+
+    render(<DiffView />);
+
+    // Click add comment button
+    const addCommentButtons = screen.getAllByRole('button', { name: /add comment/i });
+    const codeLineButton = addCommentButtons[1];
+    if (codeLineButton) {
+      fireEvent.click(codeLineButton);
+    }
+
+    // Type and submit a comment
+    const textarea = await screen.findByRole('textbox');
+    fireEvent.change(textarea, { target: { value: 'Test comment' } });
+
+    const submitButton = screen.getByRole('button', { name: /^comment$/i });
+    fireEvent.click(submitButton);
+
+    // Error message should appear
+    await waitFor(() => {
+      expect(screen.getByText(/Network error/i)).toBeInTheDocument();
+    });
+  });
+
+  it('renders existing comment threads', () => {
+    vi.mocked(useDiffStore).mockReturnValue({
+      files: [
+        {
+          filename: 'src/index.ts',
+          status: FileChangeStatus.Modified,
+          additions: 1,
+          deletions: 0,
+          changes: 1,
+          patch: '@@ -1,3 +1,4 @@\n context\n+added line',
+        },
+      ],
+      selectedFileIndex: 0,
+      isLoading: false,
+    });
+
+    vi.mocked(useCommentsStore).mockReturnValue({
+      ...mockDefaultCommentsState,
+      threads: [
+        {
+          id: 'thread-1',
+          path: 'src/index.ts',
+          line: 2,
+          side: 'RIGHT' as const,
+          isResolved: false,
+          comments: [
+            {
+              id: 'comment-1',
+              body: 'This is a test comment',
+              author: { id: 'user-1', login: 'testuser', avatarUrl: 'https://example.com/avatar.png' },
+              createdAt: new Date('2024-01-01'),
+              updatedAt: new Date('2024-01-01'),
+              path: 'src/index.ts',
+              line: 2,
+              side: 'RIGHT' as const,
+              position: 1,
+            },
+          ],
+        },
+      ],
+    });
+
+    render(<DiffView />);
+
+    expect(screen.getByText('This is a test comment')).toBeInTheDocument();
+  });
+
+  it('clears announcement after timeout', () => {
+    vi.useFakeTimers();
+    const clearAnnouncement = vi.fn();
+
+    vi.mocked(useDiffStore).mockReturnValue({
+      files: [
+        {
+          filename: 'src/index.ts',
+          status: FileChangeStatus.Modified,
+          additions: 1,
+          deletions: 0,
+          changes: 1,
+          patch: '@@ -1,3 +1,4 @@\n context\n+added line',
+        },
+      ],
+      selectedFileIndex: 0,
+      isLoading: false,
+    });
+
+    vi.mocked(useCommentsStore).mockReturnValue({
+      ...mockDefaultCommentsState,
+      announcement: 'Comment posted.',
+      clearAnnouncement,
+    });
+
+    render(<DiffView />);
+
+    // Fast forward past the announcement timeout (4000ms)
+    vi.advanceTimersByTime(4100);
+
+    expect(clearAnnouncement).toHaveBeenCalled();
+
+    vi.useRealTimers();
   });
 });
