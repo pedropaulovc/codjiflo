@@ -1,2 +1,3 @@
 export { useOAuthFlow } from './useOAuthFlow';
-export { useTokenRefresh, withTokenRefresh } from './useTokenRefresh';
+export { useTokenRefresh, refreshTokenBeforeApiCall } from './useTokenRefresh';
+export { useRequireAuth, useRedirectIfAuthenticated } from './useRequireAuth';

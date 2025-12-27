@@ -26,10 +26,10 @@ export function useTokenRefresh() {
     // Check immediately on mount
     void checkAndRefresh();
 
-    // Set up interval to check periodically
+    // Set up interval to check periodically (every 60 seconds)
     const intervalId = setInterval(() => {
       void checkAndRefresh();
-    }, oauthConfig.refreshThresholdMs / 2); // Check at half the threshold interval
+    }, 60_000);
 
     refreshTimeoutRef.current = intervalId;
 
@@ -42,10 +42,11 @@ export function useTokenRefresh() {
 }
 
 /**
- * Higher-order function to wrap API calls with automatic token refresh
- * Use this when making authenticated requests
+ * Utility function to refresh token before making an API call if needed.
+ * Call this before authenticated requests to ensure the token is valid.
+ * Note: This is a standalone utility, not a React hook.
  */
-export async function withTokenRefresh<T>(
+export async function refreshTokenBeforeApiCall<T>(
   apiCall: () => Promise<T>
 ): Promise<T> {
   const { isTokenExpiringSoon, refreshAccessToken, authMethod } = useAuthStore.getState();

@@ -22,12 +22,12 @@ interface GitHubTokenResponse {
  */
 export async function POST(req: Request): Promise<Response> {
   try {
-    const body = await req.json() as RefreshRequest;
-    const { refresh_token } = body;
+    const body = await req.json() as Partial<RefreshRequest>;
+    const refresh_token = body.refresh_token;
 
-    if (!refresh_token) {
+    if (typeof refresh_token !== 'string' || refresh_token.trim().length === 0) {
       return NextResponse.json(
-        { error: 'Missing required parameter: refresh_token' },
+        { error: 'Invalid parameter: refresh_token must be a non-empty string' },
         { status: 400 }
       );
     }
@@ -36,7 +36,10 @@ export async function POST(req: Request): Promise<Response> {
     const clientSecret = process.env['GITHUB_APP_CLIENT_SECRET'];
 
     if (!clientId || !clientSecret) {
-      console.error('Missing GitHub App credentials in environment');
+      const missing = [];
+      if (!clientId) missing.push('GITHUB_APP_CLIENT_ID');
+      if (!clientSecret) missing.push('GITHUB_APP_CLIENT_SECRET');
+      console.error(`Missing GitHub App credentials: ${missing.join(', ')}`);
       return NextResponse.json(
         { error: 'Server configuration error' },
         { status: 500 }
