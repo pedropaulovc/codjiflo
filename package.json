@@ -2,6 +2,7 @@
   "name": "codjiflo",
   "private": true,
   "version": "0.0.1",
+  "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -30,6 +31,12 @@
     "react-syntax-highlighter": "^16.1.0",
     "tailwind-merge": "^3.4.0",
     "zustand": "^5.0.9"
+  },
+  "overrides": {
+    "@swc/helpers": "^0.5.15",
+    "esbuild": "^0.25.0",
+    "path-to-regexp": "^8.0.0",
+    "undici": "^6.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",

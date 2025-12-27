@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Markdown from 'react-markdown';
 import type { Comment } from '../types';
 import { Button } from '@/components';
@@ -18,10 +19,12 @@ export function CommentItem({ comment, isCurrentUser, onEdit, onDelete }: Commen
       className="flex gap-3"
       aria-label={`Comment by ${comment.author.login}, ${timeAgo}`}
     >
-      <img
+      <Image
         src={comment.author.avatarUrl}
         alt={`${comment.author.login} avatar`}
-        className="h-8 w-8 rounded-full border border-gray-200"
+        width={32}
+        height={32}
+        className="rounded-full border border-gray-200"
       />
       <div className="flex-1 space-y-2">
         <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
