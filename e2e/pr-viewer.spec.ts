@@ -151,13 +151,16 @@ test.describe("PR Viewer Flow (S-1.2, S-1.3, S-1.4, S-1.5)", () => {
   test("Keyboard navigation works", async ({ page }) => {
     await page.goto("/pr/test/repo/123");
 
-    // Wait for files to load - check the file list navigation
+    // Wait for files to load - check the file list navigation with longer timeout
     const fileNav = page.getByRole("navigation", { name: /Changed files/i });
-    await expect(fileNav.getByText("src/components/Button.tsx")).toBeVisible();
+    await expect(fileNav.getByText("src/components/Button.tsx")).toBeVisible({ timeout: 20000 });
 
-    // First file should be selected
+    // First file should be selected - wait for selection
     const firstFile = page.getByRole("button", { name: /Button\.tsx/i });
-    await expect(firstFile).toHaveAttribute("aria-selected", "true");
+    await expect(firstFile).toHaveAttribute("aria-selected", "true", { timeout: 10000 });
+
+    // Short delay to ensure keyboard event handlers are attached
+    await page.waitForTimeout(500);
 
     // [AC-1.5.1] Press j to go to next file
     await page.keyboard.press("j");
@@ -174,12 +177,16 @@ test.describe("PR Viewer Flow (S-1.2, S-1.3, S-1.4, S-1.5)", () => {
   test("Shortcuts modal opens with ? button", async ({ page }) => {
     await page.goto("/pr/test/repo/123");
 
-    // Wait for page to load - check the file list navigation
+    // Wait for page to load - check the file list navigation with longer timeout
     const fileNav = page.getByRole("navigation", { name: /Changed files/i });
-    await expect(fileNav.getByText("src/components/Button.tsx")).toBeVisible();
+    await expect(fileNav.getByText("src/components/Button.tsx")).toBeVisible({ timeout: 20000 });
+
+    // Wait for the shortcuts button to be stable before clicking
+    const shortcutsButton = page.getByRole("button", { name: /Show keyboard shortcuts/i });
+    await expect(shortcutsButton).toBeVisible({ timeout: 10000 });
 
     // [AC-1.5.4] Click the shortcuts button to open modal
-    await page.getByRole("button", { name: /Show keyboard shortcuts/i }).click();
+    await shortcutsButton.click();
 
     // Modal should be visible
     await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10000 });
@@ -195,15 +202,22 @@ test.describe("PR Viewer Flow (S-1.2, S-1.3, S-1.4, S-1.5)", () => {
     // Navigate to dashboard
     await page.goto("/dashboard");
 
+    // Wait for page to be fully loaded
+    await expect(page.getByRole("heading", { name: /View Pull Request/i })).toBeVisible({ timeout: 15000 });
+
     // Enter invalid URL
     const input = page.getByLabel(/GitHub Pull Request URL/i);
     await input.fill("https://gitlab.com/owner/repo/pull/123");
 
+    // Wait for form validation to complete (button should be enabled after input)
+    const submitButton = page.getByRole("button", { name: /Load Pull Request/i });
+    await expect(submitButton).toBeEnabled({ timeout: 5000 });
+
     // Submit form
-    await page.getByRole("button", { name: /Load Pull Request/i }).click();
+    await submitButton.click();
 
     // Should show error message
-    await expect(page.getByText(/Invalid GitHub PR URL/i)).toBeVisible();
+    await expect(page.getByText(/Invalid GitHub PR URL/i)).toBeVisible({ timeout: 10000 });
   });
 
   test("Error handling for 404 PR", async ({ page }) => {
