@@ -51,8 +51,9 @@ test.describe("Inline comments flow (S-2.x)", () => {
   ];
 
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
-    await page.evaluate(() => {
+    // Set up authentication via addInitScript (runs BEFORE any page load)
+    // This ensures Zustand hydrates with auth state already in localStorage
+    await page.addInitScript(() => {
       localStorage.setItem(
         "auth-storage",
         JSON.stringify({
@@ -62,6 +63,7 @@ test.describe("Inline comments flow (S-2.x)", () => {
       );
     });
 
+    // Mock GitHub API endpoints
     await page.route("https://api.github.com/repos/test/repo/pulls/123", (route) => {
       route.fulfill({
         status: 200,
