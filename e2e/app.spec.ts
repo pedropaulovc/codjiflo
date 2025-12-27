@@ -19,8 +19,12 @@ test.describe("CodjiFlo App", () => {
 
     // Login first
     await page.goto("/login");
+
+    // Expand PAT section
+    await page.getByText(/Use Personal Access Token/i).click();
+
     const input = page.getByLabel(/Personal Access Token/i);
-    const button = page.getByRole("button", { name: /Connect/i });
+    const button = page.getByRole("button", { name: /Connect with PAT/i });
     await input.fill("ghp_validtoken123456789");
     await button.click();
 

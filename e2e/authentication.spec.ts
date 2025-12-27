@@ -16,8 +16,16 @@ test.describe("Authentication Flow (S-1.1)", () => {
       page.getByRole("heading", { name: /Connect to GitHub/i })
     ).toBeVisible();
     await expect(
-      page.getByText(/Enter your Personal Access Token to get started/i)
+      page.getByText(/Sign in to start reviewing pull requests/i)
     ).toBeVisible();
+
+    // OAuth button should be visible
+    await expect(
+      page.getByRole("button", { name: /Login with GitHub/i })
+    ).toBeVisible();
+
+    // Expand PAT section
+    await page.getByText(/Use Personal Access Token/i).click();
 
     // [AC-1.1.2] Personal Access Token input field exists
     const input = page.getByLabel(/Personal Access Token/i);
@@ -35,7 +43,7 @@ test.describe("Authentication Flow (S-1.1)", () => {
 
     // Enter valid token and submit
     await input.fill("ghp_validtoken123456789");
-    const button = page.getByRole("button", { name: /Connect/i });
+    const button = page.getByRole("button", { name: /Connect with PAT/i });
     await button.click();
 
     // [AC-1.1.4] Should navigate to dashboard after successful auth
@@ -55,8 +63,11 @@ test.describe("Authentication Flow (S-1.1)", () => {
   test("Authentication error handling and accessibility", async ({ page }) => {
     await page.goto("/login");
 
+    // Expand PAT section
+    await page.getByText(/Use Personal Access Token/i).click();
+
     const input = page.getByLabel(/Personal Access Token/i);
-    const button = page.getByRole("button", { name: /Connect/i });
+    const button = page.getByRole("button", { name: /Connect with PAT/i });
 
     // [AC-1.1.3] Validate token format - invalid prefix
     await input.fill("invalid_token");

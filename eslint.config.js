@@ -7,7 +7,7 @@ import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
-export default tseslint.config({ ignores: ["dist", "storybook-static", "coverage", "e2e/**/*", ".storybook/**/*", "playwright-report"] }, {
+export default tseslint.config({ ignores: ["dist", "storybook-static", "coverage", "e2e/**/*", ".storybook/**/*", "playwright-report", ".next/**/*", "next-env.d.ts"] }, {
   extends: [js.configs.recommended, ...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked],
   files: ["**/*.{ts,tsx}"],
   languageOptions: {

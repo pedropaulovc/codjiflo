@@ -1,33 +1,40 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+'use client';
+
+import { useEffect, useState, useCallback, use } from 'react';
+import { useRouter } from 'next/navigation';
 import { usePRStore } from '@/features/pr';
 import { useDiffStore, FileList, DiffView } from '@/features/diff';
 import { PRHeader } from '@/features/pr/components';
 import { useKeyboardShortcuts, ShortcutsModal } from '@/features/keyboard';
 import { useCommentsStore } from '@/features/comments';
+import { useAuthStore } from '@/features/auth/stores/useAuthStore';
 
-/**
- * Pull Request View page
- * Orchestrates PR metadata, file list, and diff view
- * S-1.2 through S-1.5
- */
-export function PullRequestView() {
-  const { owner, repo, number } = useParams<{
+interface PRPageProps {
+  params: Promise<{
     owner: string;
     repo: string;
     number: string;
-  }>();
-  const navigate = useNavigate();
+  }>;
+}
+
+export default function PullRequestPage({ params }: PRPageProps) {
+  const { owner, repo, number } = use(params);
+  const router = useRouter();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const { loadPR, reset: resetPR } = usePRStore();
   const { loadFiles, reset: resetDiff } = useDiffStore();
   const { loadThreads, reset: resetComments } = useCommentsStore();
   const [showShortcuts, setShowShortcuts] = useState(false);
 
-  // Activate keyboard shortcuts
   useKeyboardShortcuts();
 
-  // Handle "?" key to show shortcuts modal
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace('/login');
+    }
+  }, [isAuthenticated, router]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === '?' && !e.ctrlKey && !e.metaKey) {
@@ -47,19 +54,16 @@ export function PullRequestView() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Load data when params change
   useEffect(() => {
     if (!owner || !repo || !number) return;
 
     const prNumber = parseInt(number, 10);
     if (isNaN(prNumber)) return;
 
-    // Load PR, files, and comments in parallel
     void loadPR(owner, repo, prNumber);
     void loadFiles(owner, repo, prNumber);
     void loadThreads(owner, repo, prNumber);
 
-    // Cleanup on unmount
     return () => {
       resetPR();
       resetDiff();
@@ -68,10 +72,13 @@ export function PullRequestView() {
   }, [owner, repo, number, loadPR, loadFiles, loadThreads, resetPR, resetDiff, resetComments]);
 
   const handleBackToDashboard = useCallback(() => {
-    void navigate('/dashboard');
-  }, [navigate]);
+    router.push('/dashboard');
+  }, [router]);
 
-  // Error state for invalid params
+  if (!isAuthenticated) {
+    return null;
+  }
+
   if (!owner || !repo || !number) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -91,7 +98,6 @@ export function PullRequestView() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      {/* Top bar */}
       <header className="bg-white border-b px-4 py-2 flex items-center gap-4 shrink-0">
         <button
           onClick={handleBackToDashboard}
@@ -112,9 +118,7 @@ export function PullRequestView() {
         </button>
       </header>
 
-      {/* Main content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left panel: PR metadata + file list */}
         <aside className="w-80 shrink-0 flex flex-col bg-white border-r overflow-hidden">
           <PRHeader />
           <div className="flex-1 overflow-y-auto border-t">
@@ -122,13 +126,11 @@ export function PullRequestView() {
           </div>
         </aside>
 
-        {/* Right panel: Diff view */}
         <main className="flex-1 overflow-hidden">
           <DiffView />
         </main>
       </div>
 
-      {/* Shortcuts modal - S-1.5: AC-1.5.4 */}
       <ShortcutsModal
         isOpen={showShortcuts}
         onClose={() => setShowShortcuts(false)}
