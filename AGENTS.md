@@ -30,7 +30,7 @@ npm run test:all         # REQUIRED before push (lint + typecheck + coverage + e
 
 ## Tech Stack
 
-React 18, TypeScript (strict), Vite, Tailwind CSS, Zustand, Vitest, Playwright, Storybook
+Next.js 15 (App Router, Turbopack), React 19, TypeScript (strict), Tailwind CSS 4, Zustand, Vitest, Playwright, Storybook
 
 ---
 
@@ -84,16 +84,65 @@ src/
     - **Mocking**: Use MSW (Mock Service Worker) for network isolation during tests. Do NOT hit real GitHub API in CI.
     - **Coverage**: One E2E spec per User Story Acceptance Criteria set.
 
+### 1.5 Authentication Architecture
+
+#### OAuth Flow with PKCE
+The app uses GitHub OAuth 2.0 with PKCE (Proof Key for Code Exchange) for secure authentication.
+
+**Key Files:**
+| File | Purpose |
+|------|---------|
+| `src/features/auth/config.ts` | OAuth configuration (client ID, scopes, URLs) |
+| `src/features/auth/utils/pkce.ts` | PKCE utilities and state storage |
+| `src/features/auth/utils/cookies.ts` | Cross-subdomain cookie utilities |
+| `src/features/auth/hooks/useOAuthFlow.ts` | Initiates OAuth redirect |
+| `src/features/auth/stores/useAuthStore.ts` | Token storage (Zustand + localStorage) |
+| `src/app/api/auth/token/route.ts` | Server-side token exchange (keeps secret secure) |
+| `src/app/api/auth/refresh/route.ts` | Server-side token refresh |
+| `src/app/auth/callback/page.tsx` | OAuth callback handler |
+| `src/app/auth/landing/page.tsx` | Cross-subdomain token hydration |
+
+#### Cross-Subdomain Authentication (PR Previews)
+PR previews run on subdomains like `pr-123.codjiflo.vza.net`. Since GitHub OAuth only allows specific callback URLs, all OAuth callbacks go through the main domain (`codjiflo.vza.net`), then redirect back to the originating subdomain.
+
+**Flow:**
+```
+1. User on pr-123.codjiflo.vza.net clicks "Login"
+2. Store return origin in cookie (domain=.vza.net)
+3. Redirect to GitHub OAuth with callback=codjiflo.vza.net/auth/callback
+4. GitHub redirects to codjiflo.vza.net/auth/callback
+5. Callback exchanges code for token, stores in transfer cookie
+6. Redirect to pr-123.codjiflo.vza.net/auth/landing
+7. Landing page hydrates token from cookie into auth store
+8. Redirect to dashboard
+```
+
+**Cookie Strategy:**
+- All OAuth cookies use `domain=.vza.net` for cross-subdomain access
+- `oauth_code_verifier` / `oauth_state`: PKCE state (10 min TTL)
+- `oauth_return_origin`: Where to redirect after auth (10 min TTL)
+- `oauth_token_transfer`: Short-lived token transfer (1 min TTL)
+
+#### Environment Variables
+| Variable | Location | Purpose |
+|----------|----------|---------|
+| `GITHUB_APP_CLIENT_ID` | Server only | Token exchange |
+| `GITHUB_APP_CLIENT_SECRET` | Server only | Token exchange (secret) |
+| `NEXT_PUBLIC_GITHUB_CLIENT_ID` | Client | Build OAuth URL |
+| `NEXT_PUBLIC_APP_URL` | Client | OAuth callback base URL |
+
+**For PR previews:** Set `NEXT_PUBLIC_APP_URL=https://codjiflo.vza.net` (main domain handles OAuth, then redirects back).
+
 ## 2. Milestone Architectural Plans
 
 ### Milestone 1: SPA Foundation
 **Goal**: Establish the app shell and GitHub Data integration.
 - **Scaffolding Needs**:
   - `src/api/github-client.ts`: The central HTTP/Rest adapter.
-  - `src/features/auth`: State machine for PAT handling.
+  - `src/features/auth`: OAuth + PAT authentication.
   - `src/features/pr`: Dashboard and Navigation logic.
   - `src/features/diff`: Basic "Unified Hacker View" renderer.
-- **Critical Assumption**: We are building a **React SPA**. Routing is handled by `react-router-dom` (or simple conditional rendering if the scope remains small, but Router is better for deeplinking in the future). *Decision: Use React Router.*
+- **Framework**: Next.js 15 with App Router. Pages in `src/app/`, API routes in `src/app/api/`.
 
 ### Milestone 2: Comments Engine
 **Goal**: Inline commenting system.
