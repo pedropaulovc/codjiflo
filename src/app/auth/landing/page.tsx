@@ -24,27 +24,33 @@ export default function AuthLandingPage() {
 
   useEffect(() => {
     const hydrateToken = () => {
-      const tokenData = retrieveTokenTransfer();
+      try {
+        const tokenData = retrieveTokenTransfer();
 
-      if (!tokenData) {
-        setError('Authentication session expired. Please try logging in again.');
+        if (!tokenData) {
+          setError('Authentication session expired. Please try logging in again.');
+          setIsProcessing(false);
+          return;
+        }
+
+        // Hydrate the auth store with transferred tokens
+        useAuthStore.setState({
+          token: tokenData.accessToken,
+          refreshToken: tokenData.refreshToken ?? null,
+          tokenExpiresAt: tokenData.expiresAt ?? null,
+          authMethod: 'oauth',
+          isAuthenticated: true,
+          error: null,
+          isValidating: false,
+        });
+
+        // Redirect to dashboard
+        router.replace('/dashboard');
+      } catch (err) {
+        console.error('Failed to complete authentication landing flow:', err);
+        setError('An unexpected error occurred. Please try logging in again.');
         setIsProcessing(false);
-        return;
       }
-
-      // Hydrate the auth store with transferred tokens
-      useAuthStore.setState({
-        token: tokenData.accessToken,
-        refreshToken: tokenData.refreshToken ?? null,
-        tokenExpiresAt: tokenData.expiresAt ?? null,
-        authMethod: 'oauth',
-        isAuthenticated: true,
-        error: null,
-        isValidating: false,
-      });
-
-      // Redirect to dashboard
-      router.replace('/dashboard');
     };
 
     hydrateToken();

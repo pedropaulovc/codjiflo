@@ -7,6 +7,7 @@ import {
   retrieveOAuthState,
   retrieveReturnOrigin,
   storeTokenTransfer,
+  isValidReturnOrigin,
 } from '@/features/auth/utils/pkce';
 import { oauthConfig } from '@/features/auth/config';
 
@@ -62,6 +63,14 @@ function OAuthCallbackContent() {
       const currentOrigin = window.location.origin;
       const needsCrossOriginRedirect = returnOrigin && returnOrigin !== currentOrigin;
 
+      // Validate return origin to prevent open redirect attacks
+      if (needsCrossOriginRedirect && !isValidReturnOrigin(returnOrigin)) {
+        console.error('Invalid return origin:', returnOrigin);
+        setError('Invalid redirect destination. Please try logging in again.');
+        setIsProcessing(false);
+        return;
+      }
+
       try {
         if (needsCrossOriginRedirect) {
           // Cross-origin flow: exchange token here, then redirect with token in cookie
@@ -75,6 +84,15 @@ function OAuthCallbackContent() {
               code_verifier: storedState.codeVerifier,
             }),
           });
+
+          // Check HTTP status before parsing JSON
+          if (!response.ok) {
+            const errorText = await response.text().catch(() => '');
+            console.error('Token endpoint error:', response.status, errorText);
+            setError(`Authentication failed (HTTP ${String(response.status)})`);
+            setIsProcessing(false);
+            return;
+          }
 
           const data = (await response.json()) as TokenResponse;
 

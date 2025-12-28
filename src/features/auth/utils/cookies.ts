@@ -4,6 +4,12 @@
  */
 
 /**
+ * Known base domain for production deployment.
+ * Hardcoded to avoid security issues with multi-level TLDs (e.g., .co.uk).
+ */
+export const KNOWN_BASE_DOMAIN = '.vza.net';
+
+/**
  * Cookie names for OAuth flow
  */
 export const OAUTH_COOKIE_KEYS = {
@@ -14,9 +20,9 @@ export const OAUTH_COOKIE_KEYS = {
 } as const;
 
 /**
- * Gets the base domain for cookie sharing across subdomains
- * e.g., "pr-123.codjiflo.vza.net" -> ".vza.net"
- * For localhost, returns undefined (no domain attribute needed)
+ * Gets the base domain for cookie sharing across subdomains.
+ * Returns the hardcoded KNOWN_BASE_DOMAIN for production hosts,
+ * or undefined for localhost (no domain attribute needed).
  */
 export function getBaseDomain(): string | undefined {
   if (typeof window === 'undefined') return undefined;
@@ -28,14 +34,44 @@ export function getBaseDomain(): string | undefined {
     return undefined;
   }
 
-  // Extract base domain (last two parts for standard TLDs)
-  // e.g., "pr-123.codjiflo.vza.net" -> ".vza.net"
-  const parts = hostname.split('.');
-  if (parts.length >= 2) {
-    return '.' + parts.slice(-2).join('.');
+  // Use hardcoded base domain for known production hosts
+  if (hostname.endsWith(KNOWN_BASE_DOMAIN.slice(1))) {
+    return KNOWN_BASE_DOMAIN;
   }
 
+  // Unknown domain - don't set domain attribute (cookie will be host-only)
   return undefined;
+}
+
+/**
+ * Validates that a return origin is safe to redirect to.
+ * Only allows localhost or subdomains of the known base domain.
+ */
+export function isValidReturnOrigin(origin: string): boolean {
+  try {
+    const url = new URL(origin);
+    const hostname = url.hostname;
+
+    // Allow localhost
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return true;
+    }
+
+    // Allow exact match of base domain (without leading dot)
+    const baseDomainWithoutDot = KNOWN_BASE_DOMAIN.slice(1); // "vza.net"
+    if (hostname === baseDomainWithoutDot) {
+      return true;
+    }
+
+    // Allow subdomains of known base domain (must have dot before base domain)
+    if (hostname.endsWith(KNOWN_BASE_DOMAIN)) {
+      return true;
+    }
+
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -168,8 +204,16 @@ export interface TokenTransferData {
 }
 
 /**
- * Stores tokens in a cookie for cross-subdomain transfer
- * The token is JSON-encoded and base64-encoded for safe cookie storage
+ * Stores tokens in a cookie for cross-subdomain transfer.
+ *
+ * The token data is JSON-encoded and then base64-encoded to ensure it is
+ * safely serializable for cookie transport. This base64 step is for
+ * encoding/transport only and does NOT provide encryption or additional
+ * confidentiality. Anyone with access to the cookie can decode it.
+ *
+ * Security mitigations:
+ * - 1-minute TTL limits exposure window
+ * - Cookie is cleared immediately after retrieval
  */
 export function storeTokenTransfer(data: TokenTransferData): void {
   const encoded = btoa(JSON.stringify(data));

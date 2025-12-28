@@ -23,7 +23,11 @@ const mockCookieGetter = vi.fn(() => {
 
 const mockCookieSetter = vi.fn((value: string) => {
   const [cookiePart] = value.split(';');
+  if (!cookiePart) return;
+
   const [name, val] = cookiePart.split('=');
+  if (!name) return;
+
   const decodedName = decodeURIComponent(name);
 
   if (value.includes('max-age=0')) {
@@ -189,7 +193,7 @@ describe('PKCE utilities', () => {
       const storedValue = mockCookies[OAUTH_STORAGE_KEYS.TOKEN_TRANSFER];
       expect(storedValue).toBeDefined();
       // Verify it's base64 encoded
-      const decoded = JSON.parse(atob(storedValue)) as typeof tokenData;
+      const decoded = JSON.parse(atob(storedValue ?? '')) as typeof tokenData;
       expect(decoded).toEqual(tokenData);
     });
 
