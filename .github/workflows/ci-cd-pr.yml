@@ -254,7 +254,7 @@ jobs:
 
       - name: Install Playwright browsers
         timeout-minutes: 10
-        run: npx playwright install --with-deps chromium-headless-shell
+        run: npx playwright install chromium-headless-shell
 
       - name: Run E2E tests (mock mode)
         timeout-minutes: 3
@@ -281,7 +281,7 @@ jobs:
 
       - name: Install Playwright browsers
         timeout-minutes: 10
-        run: npx playwright install --with-deps chromium-headless-shell
+        run: npx playwright install chromium-headless-shell
 
       - name: Run E2E tests (prod mode)
         timeout-minutes: 3
@@ -310,7 +310,7 @@ jobs:
 
       - name: Install Playwright browsers
         timeout-minutes: 10
-        run: npx playwright install --with-deps chromium-headless-shell
+        run: npx playwright install chromium-headless-shell
 
       - name: Run storybook tests
         timeout-minutes: 1
