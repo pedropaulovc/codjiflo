@@ -192,6 +192,24 @@ describe('GitHubFileBackend', () => {
         encoding: 'utf-8',
       });
     });
+    it('decodes UTF-8 content without corrupting non-ASCII characters', async () => {
+      const content = 'café 🚀';
+      const encodedContent = btoa(String.fromCharCode(...new TextEncoder().encode(content)));
+      const mockResponse = {
+        path: 'unicode.txt',
+        sha: 'unicode123',
+        content: encodedContent,
+        encoding: 'base64',
+        size: encodedContent.length,
+        type: 'file',
+      };
+
+      mockFetch.mockResolvedValue(mockResponse);
+
+      const result = await backend.getFileContent('owner', 'repo', 'unicode.txt', 'main');
+
+      expect(result.content).toBe(content);
+    });
 
     it('handles base64 content with line breaks', async () => {
       // GitHub API sometimes returns base64 with newlines
