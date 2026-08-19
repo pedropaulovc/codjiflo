@@ -84,7 +84,12 @@ export class GitHubFileBackend implements IFileBackend {
       try {
         // Handle base64 content with line breaks
         const cleanBase64 = data.content.replace(/\n/g, '');
-        content = atob(cleanBase64);
+        const binaryContent = atob(cleanBase64);
+        const bytes = new Uint8Array(binaryContent.length);
+        for (let index = 0; index < binaryContent.length; index += 1) {
+          bytes[index] = binaryContent.charCodeAt(index);
+        }
+        content = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
         encoding = 'utf-8';
       } catch (error) {
         // If decoding fails, the base64 content is invalid and should not be treated as valid binary
