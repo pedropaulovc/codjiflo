@@ -253,7 +253,7 @@ jobs:
         run: for i in 1 2 3; do npm ci && break || sleep 15; done
 
       - name: Install Playwright browsers
-        timeout-minutes: 1
+        timeout-minutes: 5
         run: npx playwright install --with-deps chromium-headless-shell
 
       - name: Run E2E tests (mock mode)
@@ -280,7 +280,7 @@ jobs:
         run: for i in 1 2 3; do npm ci && break || sleep 15; done
 
       - name: Install Playwright browsers
-        timeout-minutes: 1
+        timeout-minutes: 5
         run: npx playwright install --with-deps chromium-headless-shell
 
       - name: Run E2E tests (prod mode)
@@ -309,7 +309,7 @@ jobs:
         run: for i in 1 2 3; do npm ci && break || sleep 15; done
 
       - name: Install Playwright browsers
-        timeout-minutes: 1
+        timeout-minutes: 5
         run: npx playwright install --with-deps chromium-headless-shell
 
       - name: Run storybook tests
